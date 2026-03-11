@@ -12,7 +12,7 @@
     
     <style>
         :root {
-            --primary: #49ae34; /* F+F Brand Color Placeholder */
+            --primary: #49ae34; 
             --bg: #49ae34;
             --text: #333;
         }
@@ -39,6 +39,18 @@
         }
         .btn:hover { background-color: #8ebd84; }
         .btn-secondary { background-color: #6c757d; }
+        
+        /* Specific styling for the accept/decline buttons so they sit side-by-side */
+        .btn-half {
+            width: 48%;
+            display: inline-block;
+            margin: 10px 1%;
+        }
+        .btn-accept { background-color: #28a745; }
+        .btn-accept:hover { background-color: #218838; }
+        .btn-decline { background-color: #dc3545; }
+        .btn-decline:hover { background-color: #c82333; }
+
         input[type="text"] {
             width: 90%; padding: 15px; margin: 10px 0; font-size: 1.2em;
             border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;
@@ -46,7 +58,6 @@
         canvas { border: 2px dashed #ccc; border-radius: 8px; width: 100%; height: 200px; touch-action: none; }
         .label { text-align: left; font-weight: bold; margin-top: 10px; display: block; }
         
-        /* Print Styles - Ensures only the label prints */
         @media print {
             body * { visibility: hidden; }
             #print-area, #print-area * { visibility: visible; }
@@ -56,15 +67,12 @@
 </head>
 <body>
 
-        <div id="home-screen" class="view active">
+    <div id="home-screen" class="view active">
         <img src="assets/logo.jpeg" alt="Foster + Freeman Logo" style="width: 250px; margin-bottom: 5px; height: auto;">
-        
         <h1>Welcome</h1>
-        
         <button class="btn" onclick="showScreen('type-screen')">Sign In</button>
         <button class="btn btn-secondary" onclick="startScanner()">Sign Out</button>
     </div>
-
 
     <div id="type-screen" class="view">
         <h2>Who are you visiting as?</h2>
@@ -80,24 +88,28 @@
         <input type="text" id="vehicle" placeholder="Vehicle Registration">
         <input type="text" id="contact" placeholder="F+F Contact Person" required>
         
-        <div id="contractor-terms-section" style="display: none; text-align: left; margin: 15px 0;">
-            <h3>Contractor Safety & Terms</h3>
-            <div style="height: 150px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; font-size: 0.9em; background: #fff; border-radius: 6px;">
-                <p><strong>1. Safety Induction</strong><br>All contractors must adhere to Foster + Freeman on-site safety protocols at all times.</p>
-                <p><strong>2. Liability</strong><br>The contractor assumes full responsibility for their equipment and actions while on premises.</p>
-                <p><strong>3. Work Permits</strong><br>Hot work or hazardous tasks require a separate permit authorized by your F+F contact.</p>
-                </div>
-            <label style="display: block; margin-top: 10px; font-weight: bold; cursor: pointer;">
-                <input type="checkbox" id="accept-terms"> I have read and agree to the Contractor Terms & Conditions
-            </label>
-        </div>
-        
         <span class="label">Please Sign Below:</span>
         <canvas id="signature-pad"></canvas>
         <button class="btn btn-secondary" style="padding: 10px; font-size: 1em; margin-top: 10px;" onclick="signaturePad.clear()">Clear Signature</button>
 
-        <button class="btn" onclick="submitForm()">Submit & Print ID Label</button>
+        <button class="btn" onclick="submitForm()">Continue</button>
         <button class="btn btn-secondary" onclick="showScreen('type-screen')">Cancel</button>
+    </div>
+
+    <div id="terms-screen" class="view">
+        <h2>Contractor Safety & Terms</h2>
+        <p style="text-align: left; margin-bottom: 10px;">Please read and accept the following terms to complete your sign-in:</p>
+        
+        <div style="height: 40vh; overflow-y: scroll; border: 1px solid #ccc; padding: 15px; font-size: 1em; background: #fff; border-radius: 6px; text-align: left; line-height: 1.5;">
+            <p><strong>1. Safety Induction</strong><br>All contractors must adhere to Foster + Freeman on-site safety protocols at all times.</p>
+            <p><strong>2. Liability</strong><br>The contractor assumes full responsibility for their equipment and actions while on premises.</p>
+            <p><strong>3. Work Permits</strong><br>Hot work or hazardous tasks require a separate permit authorized by your F+F contact.</p>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <button class="btn btn-half btn-accept" onclick="acceptTerms()">I Accept</button>
+            <button class="btn btn-half btn-decline" onclick="declineTerms()">Decline</button>
+        </div>
     </div>
 
     <div id="signout-screen" class="view">
@@ -134,7 +146,6 @@
         const signaturePad = new SignaturePad(canvas);
 
         // --- GOOGLE APPS SCRIPT URL ---
-        // !!! IMPORTANT: PASTE YOUR DEPLOYED WEB APP URL HERE !!!
         const CLOUD_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE"; 
 
         // --- UI NAVIGATION ---
@@ -157,20 +168,14 @@
             currentVisitorType = type;
             document.getElementById('form-title').innerText = type + ' Sign In';
             
-            // Clear inputs
             document.getElementById('name').value = '';
             document.getElementById('company').value = '';
             document.getElementById('vehicle').value = '';
             document.getElementById('contact').value = '';
-            document.getElementById('accept-terms').checked = false;
             signaturePad.clear();
             
-            // Toggle T&Cs
-            const termsSection = document.getElementById('contractor-terms-section');
-            termsSection.style.display = (type === 'Contractor') ? 'block' : 'none';
-            
             showScreen('form-screen');
-            setTimeout(resizeCanvas, 100); // Small delay to ensure canvas is visible before resize
+            setTimeout(resizeCanvas, 100); 
         }
 
         // --- PDF GENERATION ---
@@ -179,10 +184,10 @@
             const doc = new jsPDF();
             const now = new Date();
             const timestamp = now.toLocaleDateString() + " " + now.toLocaleTimeString();
+            
             const logoImg = new Image();
             logoImg.src = 'assets/logo.jpeg';
-            // Add this before the text
-            doc.addImage(logoImg, 'PNG', 85, 5, 40, 15); // x, y, width, height
+            doc.addImage(logoImg, 'PNG', 85, 5, 40, 15); 
 
             doc.setFontSize(22);
             doc.text("Foster + Freeman", 105, 20, { align: "center" });
@@ -211,7 +216,7 @@
             doc.text("Signature:", 20, 160);
             doc.addImage(data.signature, 'PNG', 20, 165, 70, 30); 
 
-            return doc.output('datauristring').split(',')[1]; // Returns clean base64 string
+            return doc.output('datauristring').split(',')[1]; 
         }
 
         // --- CLOUD SYNC ---
@@ -220,14 +225,10 @@
                 console.warn("Cloud URL not set! Data will not be saved.");
                 return;
             }
-
             const payload = { ...data, action: action, pdf: pdfBase64 };
-
             try {
                 await fetch(CLOUD_URL, {
-                    method: "POST",
-                    mode: "no-cors", 
-                    body: JSON.stringify(payload)
+                    method: "POST", mode: "no-cors", body: JSON.stringify(payload)
                 });
                 console.log("Data sent to cloud successfully.");
             } catch (err) {
@@ -235,8 +236,41 @@
             }
         }
 
-        // --- SUBMIT FORM ---
-        async function submitForm() {
+        // --- FORM LOGIC & BRANCHING ---
+        function submitForm() {
+            // 1. Verify all fields are filled
+            const name = document.getElementById('name').value.trim();
+            const company = document.getElementById('company').value.trim();
+            const contact = document.getElementById('contact').value.trim();
+
+            if(!name || !company || !contact || signaturePad.isEmpty()) {
+                alert("Please fill in all required fields and sign the pad.");
+                return;
+            }
+
+            // 2. Branch logic based on visitor type
+            if (currentVisitorType === 'Contractor') {
+                // Take contractors to the full-screen terms page
+                showScreen('terms-screen');
+            } else {
+                // Visitors can bypass terms and finalize immediately
+                finalizeSignIn();
+            }
+        }
+
+        function declineTerms() {
+            alert("You must accept the terms and conditions to sign in as a contractor.");
+            showScreen('type-screen'); // Send them back
+        }
+
+        function acceptTerms() {
+            // The contractor clicked "I Accept". Proceed to finalize!
+            finalizeSignIn();
+        }
+
+        // --- FINALIZING THE DATA ---
+        async function finalizeSignIn() {
+            // Gather all the data from the hidden form
             const data = {
                 type: currentVisitorType,
                 name: document.getElementById('name').value.trim(),
@@ -246,15 +280,9 @@
                 signature: signaturePad.toDataURL() 
             };
 
-            // Validation
-            if(!data.name || !data.company || !data.contact || signaturePad.isEmpty()) {
-                alert("Please fill in all required fields and sign.");
-                return;
-            }
-            if (currentVisitorType === 'Contractor' && !document.getElementById('accept-terms').checked) {
-                alert("You must read and accept the Terms and Conditions to proceed.");
-                return;
-            }
+            // Show loading screen while PDF generates
+            document.getElementById('thankyou-msg').innerText = "Processing Details...";
+            showScreen('thankyou-screen');
 
             // Generate PDF for Contractors
             let pdfStr = null;
@@ -273,7 +301,7 @@
             const qrContainer = document.getElementById("lbl-qr");
             qrContainer.innerHTML = ""; 
             new QRCode(qrContainer, {
-                text: data.name, // The scanner will read this name
+                text: data.name, 
                 width: 60, height: 60
             });
 
@@ -281,7 +309,6 @@
             setTimeout(() => {
                 window.print(); 
                 document.getElementById('thankyou-msg').innerText = `Welcome to foster+freeman, ${data.name}!`;
-                showScreen('thankyou-screen');
                 setTimeout(() => { showScreen('home-screen'); }, 4000);
             }, 500); 
         }
@@ -289,14 +316,14 @@
         // --- QR SCANNER (SIGN OUT) ---
         async function startScanner() {
             showScreen('signout-screen');
-            document.getElementById('signout-name').value = ''; // Clear manual input
+            document.getElementById('signout-name').value = ''; 
             html5QrCode = new Html5Qrcode("reader");
             
             const config = { fps: 10, qrbox: { width: 250, height: 250 } };
 
             try {
                 await html5QrCode.start(
-                    { facingMode: "user" }, // Front-facing camera
+                    { facingMode: "user" }, 
                     config,
                     (decodedText) => {
                         console.log("QR Scanned:", decodedText);
@@ -306,7 +333,6 @@
                 );
             } catch (err) {
                 console.error("Camera start error:", err);
-                // Fail silently, user can still type name manually
             }
         }
 
@@ -325,10 +351,9 @@
             identifier = identifier.trim();
             if(!identifier) return alert("Please scan a code or enter a name.");
             
-            // Send sign-out event to cloud
             sendToCloud({ name: identifier, type: "Unknown" }, null, "SignOut");
             
-            if(html5QrCode && html5QrCode.isScanning) stopScanner(); // Stop camera if running
+            if(html5QrCode && html5QrCode.isScanning) stopScanner(); 
 
             document.getElementById('thankyou-msg').innerText = "Thank you and goodbye!";
             showScreen('thankyou-screen');
