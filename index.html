@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Foster + Freeman Visitor Kiosk</title>
+    <title>foster+freeman Visitor Kiosk</title>
     
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -58,7 +58,7 @@
 
     <div id="home-screen" class="view active">
         <h1>Foster + Freeman</h1>
-        <p>Welcome to our facility</p>
+        <p>Welcome</p>
         <button class="btn" onclick="showScreen('type-screen')">Sign In</button>
         <button class="btn btn-secondary" onclick="startScanner()">Sign Out</button>
     </div>
@@ -93,7 +93,7 @@
         <canvas id="signature-pad"></canvas>
         <button class="btn btn-secondary" style="padding: 10px; font-size: 1em; margin-top: 10px;" onclick="signaturePad.clear()">Clear Signature</button>
 
-        <button class="btn" onclick="submitForm()">Submit & Print Label</button>
+        <button class="btn" onclick="submitForm()">Submit & Print ID Label</button>
         <button class="btn btn-secondary" onclick="showScreen('type-screen')">Cancel</button>
     </div>
 
@@ -273,7 +273,7 @@
             // Trigger Print and Redirect
             setTimeout(() => {
                 window.print(); 
-                document.getElementById('thankyou-msg').innerText = `Welcome to F+F, ${data.name}!`;
+                document.getElementById('thankyou-msg').innerText = `Welcome to foster+freeman, ${data.name}!`;
                 showScreen('thankyou-screen');
                 setTimeout(() => { showScreen('home-screen'); }, 4000);
             }, 500); 
