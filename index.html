@@ -179,6 +179,10 @@
             const doc = new jsPDF();
             const now = new Date();
             const timestamp = now.toLocaleDateString() + " " + now.toLocaleTimeString();
+            const logoImg = new Image();
+            logoImg.src = 'assets/logo.jpeg';
+            // Add this before the text
+            doc.addImage(logoImg, 'PNG', 85, 5, 40, 15); // x, y, width, height
 
             doc.setFontSize(22);
             doc.text("Foster + Freeman", 105, 20, { align: "center" });
