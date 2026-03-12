@@ -58,20 +58,20 @@
         canvas { border: 2px dashed #ccc; border-radius: 8px; width: 100%; height: 200px; touch-action: none; }
         .label { text-align: left; font-weight: bold; margin-top: 10px; display: block; }
         
-            @media print {
-        body * { visibility: hidden; }
-        #print-area, #print-area * { visibility: visible; }
-        #print-area { 
-            position: absolute; 
-            left: 0; 
-            top: 0; 
-            display: block !important; 
-        }
-        /* Ensure the logo prints in high quality */
-        img {
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-        }
+        @media print {
+            body * { visibility: hidden; }
+            #print-area, #print-area * { visibility: visible; }
+            #print-area { 
+                position: absolute; 
+                left: 0; 
+                top: 0; 
+                display: block !important; 
+            }
+            /* Ensure the logo prints in high quality */
+            img {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
         }
     </style>
 </head>
@@ -139,17 +139,17 @@
         <p>Returning to home screen shortly...</p>
     </div>
 
-        <div id="print-area" style="display: none;">
-        <div id="label-content" style="width: 250px; height: 160px; border: 1px solid #000; padding: 10px; text-align: center; font-family: Arial, sans-serif; background: white; overflow: hidden;">
+    <div id="print-area" style="display: none;">
+        <div id="label-content" style="width: 250px; min-height: 180px; padding: 5px; text-align: center; font-family: Arial, sans-serif; background: white; border: 1px solid #eee;">
             
-            <img src="assets/logo.jpeg" style="width: 140px; height: auto; margin-bottom: 8px;">
+            <img src="assets/logo.jpeg" style="width: 120px; height: auto; margin: 0 auto 5px auto; display: block;">
             
-            <h2 id="lbl-name" style="margin: 0; font-size: 20px; color: #000; text-transform: uppercase;"></h2>
-            <p id="lbl-company" style="margin: 2px 0; font-size: 14px; font-weight: bold; color: #444;"></p>
+            <h2 id="lbl-name" style="margin: 0; font-size: 18px; line-height: 1.2; text-transform: uppercase;"></h2>
+            <p id="lbl-company" style="margin: 0; font-size: 13px; font-weight: bold; color: #444;"></p>
             
             <div id="lbl-qr" style="display: flex; justify-content: center; margin-top: 5px;"></div>
             
-            <p id="lbl-type" style="font-size: 10px; margin-top: 8px; font-weight: bold; border-top: 1px solid #ccc; padding-top: 3px; letter-spacing: 1px;"></p>
+            <p id="lbl-type" style="font-size: 9px; margin: 5px 0 0 0; border-top: 1px solid #ddd; padding-top: 2px;"></p>
         </div>
     </div>
 
@@ -317,7 +317,8 @@
             qrContainer.innerHTML = ""; 
             new QRCode(qrContainer, {
                 text: data.name, 
-                width: 60, height: 60
+                width: 55, // Adjusted to prevent cutoff
+                height: 55 // Adjusted to prevent cutoff
             });
 
             // Trigger Print and Redirect
