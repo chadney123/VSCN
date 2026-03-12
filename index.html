@@ -86,6 +86,20 @@
         .btn:hover { background-color: #3e942c; }
         .btn-secondary { background-color: #6c757d; }
         
+        /* Floating Re-Sign In Button */
+        .btn-re-signin {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: auto;
+            padding: 15px 25px;
+            font-size: 1.1em;
+            background-color: var(--accent);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            margin: 0;
+            z-index: 100;
+        }
+
         .btn-half { width: 48%; display: inline-block; margin: 10px 1%; }
         .btn-accept { background-color: #28a745; }
         .btn-decline { background-color: #dc3545; }
@@ -111,7 +125,9 @@
         <img src="assets/logo.jpeg" alt="Foster + Freeman Logo" style="width: 250px; margin-bottom: 5px; height: auto;">
         <h1>Welcome</h1>
         <button class="btn" onclick="showScreen('type-screen')">Sign In</button>
-        <button class="btn btn-secondary" onclick="startScanner()">Sign Out</button>
+        <button class="btn btn-secondary" onclick="startScanner('SignOut')">Sign Out</button>
+        
+        <button class="btn btn-re-signin" onclick="startScanner('ReSignIn')">🔄 Re-Sign In (Scan Badge)</button>
     </div>
 
     <div id="type-screen" class="view">
@@ -129,7 +145,7 @@
         <input type="text" id="contact" placeholder="F+F Contact Person" required>
         
         <button class="btn" onclick="submitDetails()">Next</button>
-        <button class="btn btn-secondary" onclick="showScreen('type-screen')">Cancel</button>
+        <button class="btn btn-secondary" onclick="showScreen('home-screen')">Cancel</button>
     </div>
 
     <div id="document-modal" class="modal-overlay">
@@ -161,14 +177,14 @@
         <p>A member of staff has been notified and will be with you shortly to assist.</p>
     </div>
 
-    <div id="signout-screen" class="view">
-        <h2>Sign Out</h2>
+    <div id="scan-screen" class="view">
+        <h2 id="scan-title">Scan Badge</h2>
         <p>Hold your badge QR code up to the camera</p>
         <div id="reader" style="width: 100%; max-width: 400px; margin: auto; border-radius: 10px; overflow: hidden; background: #000;"></div>
         <div style="margin-top: 20px;">
             <p>OR enter name manually:</p>
-            <input type="text" id="signout-name" placeholder="Enter Name">
-            <button class="btn" onclick="processSignOut(document.getElementById('signout-name').value)">Sign Out</button>
+            <input type="text" id="scan-manual-name" placeholder="Enter Name">
+            <button class="btn" onclick="handleScanResult(document.getElementById('scan-manual-name').value)">Confirm</button>
         </div>
         <button class="btn btn-secondary" onclick="stopScanner()">Back</button>
     </div>
@@ -196,12 +212,13 @@
         let currentVisitorType = '';
         let html5QrCode;
         let currentDocIndex = 0;
+        let scanMode = ''; // 'SignOut' or 'ReSignIn'
+        let isReturningToday = false;
         const canvas = document.getElementById('signature-pad');
         const signaturePad = new SignaturePad(canvas);
 
         const CLOUD_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE"; 
 
-        // Change "file" to your actual GitHub asset paths
         const contractorDocuments = [
             { 
                 title: "1. FF156 Contractors Rules", 
@@ -239,13 +256,14 @@
         }
         window.onresize = resizeCanvas;
 
-        function startForm(type) {
+        function startForm(type, prefilledName = '') {
             currentVisitorType = type;
             document.getElementById('form-title').innerText = type + ' Sign In';
-            document.getElementById('name').value = '';
+            document.getElementById('name').value = prefilledName;
             document.getElementById('company').value = '';
             document.getElementById('vehicle').value = '';
             document.getElementById('contact').value = '';
+            if (prefilledName === '') isReturningToday = false; 
             signaturePad.clear();
             showScreen('form-screen');
         }
@@ -261,6 +279,13 @@
             }
 
             if (currentVisitorType === 'Contractor') {
+                if (isReturningToday) {
+                    if (confirm("Welcome back! Have you already completed your safety induction today?")) {
+                        showScreen('signature-screen');
+                        setTimeout(resizeCanvas, 100);
+                        return;
+                    }
+                }
                 currentDocIndex = 0;
                 loadDocument();
             } else {
@@ -309,7 +334,62 @@
                 declinedDoc: declinedTitle
             }, null, "DeclineNotify");
 
-            setTimeout(() => { showScreen('home-screen'); }, 15000); 
+            setTimeout(() => { location.reload(); }, 15000); 
+        }
+
+        async function startScanner(mode) {
+            scanMode = mode;
+            document.getElementById('scan-title').innerText = (mode === 'SignOut') ? "Sign Out" : "Re-Sign In";
+            document.getElementById('scan-manual-name').value = '';
+            showScreen('scan-screen');
+            html5QrCode = new Html5Qrcode("reader");
+            try {
+                await html5QrCode.start(
+                    { facingMode: "user" }, 
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    (decodedText) => { handleScanResult(decodedText); }
+                );
+            } catch (err) { console.error(err); }
+        }
+
+        function stopScanner() {
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => { html5QrCode.clear(); showScreen('home-screen'); });
+            } else { showScreen('home-screen'); }
+        }
+
+        function handleScanResult(decodedText) {
+            decodedText = decodedText.trim();
+            if(!decodedText) return alert("Please scan a code or enter a name.");
+            
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => html5QrCode.clear());
+            }
+
+            let name = decodedText;
+            let type = 'Visitor';
+            if (decodedText.includes('|')) {
+                const parts = decodedText.split('|');
+                name = parts[0];
+                type = parts[1];
+            }
+
+            if (scanMode === 'SignOut') {
+                processSignOut(name, type);
+            } else {
+                isReturningToday = true;
+                startForm(type, name);
+            }
+        }
+
+        async function sendToCloud(data, pdfBase64, action = "SignIn") {
+            if (CLOUD_URL === "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") return;
+            const payload = { ...data, action: action, pdf: pdfBase64 };
+            try {
+                await fetch(CLOUD_URL, {
+                    method: "POST", mode: "no-cors", body: JSON.stringify(payload)
+                });
+            } catch (err) { console.error("Cloud sync failed:", err); }
         }
 
         async function generateContractorPDF(data) {
@@ -340,16 +420,6 @@
                 doc.addImage(data.signature, 'PNG', 130, 185, 50, 20); 
             });
             return doc.output('datauristring').split(',')[1]; 
-        }
-
-        async function sendToCloud(data, pdfBase64, action = "SignIn") {
-            if (CLOUD_URL === "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") return;
-            const payload = { ...data, action: action, pdf: pdfBase64 };
-            try {
-                await fetch(CLOUD_URL, {
-                    method: "POST", mode: "no-cors", body: JSON.stringify(payload)
-                });
-            } catch (err) { console.error("Cloud sync failed:", err); }
         }
 
         async function finalizeSignIn() {
@@ -385,44 +455,15 @@
 
             setTimeout(() => {
                 window.print(); 
-                setTimeout(() => { showScreen('home-screen'); signaturePad.clear(); }, 6000);
+                setTimeout(() => { location.reload(); }, 6000);
             }, 500); 
         }
 
-        async function startScanner() {
-            showScreen('signout-screen');
-            html5QrCode = new Html5Qrcode("reader");
-            try {
-                await html5QrCode.start(
-                    { facingMode: "user" }, 
-                    { fps: 10, qrbox: { width: 250, height: 250 } },
-                    (decodedText) => { processSignOut(decodedText); stopScanner(); }
-                );
-            } catch (err) { console.error(err); }
-        }
-
-        function stopScanner() {
-            if (html5QrCode && html5QrCode.isScanning) {
-                html5QrCode.stop().then(() => { html5QrCode.clear(); showScreen('home-screen'); });
-            } else { showScreen('home-screen'); }
-        }
-
-        function processSignOut(identifier) {
-            identifier = identifier.trim();
-            if(!identifier) return alert("Please scan a code or enter a name.");
-            
-            let nameToOut = identifier;
-            let typeToOut = "Unknown";
-            if (identifier.includes('|')) {
-                const parts = identifier.split('|');
-                nameToOut = parts[0];
-                typeToOut = parts[1];
-            }
-            
-            sendToCloud({ name: nameToOut, type: typeToOut }, null, "SignOut");
+        function processSignOut(name, type) {
+            sendToCloud({ name: name, type: type }, null, "SignOut");
             document.getElementById('thankyou-msg').innerText = "Thank you and goodbye!";
             showScreen('thankyou-screen');
-            setTimeout(() => { showScreen('home-screen'); }, 4000);
+            setTimeout(() => { location.reload(); }, 4000);
         }
     </script>
 </body>
