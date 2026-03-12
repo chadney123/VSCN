@@ -100,28 +100,33 @@
         <input type="text" id="vehicle" placeholder="Vehicle Registration">
         <input type="text" id="contact" placeholder="F+F Contact Person" required>
         
-        <span class="label">Please Sign Below:</span>
-        <canvas id="signature-pad"></canvas>
-        <button class="btn btn-secondary" style="padding: 10px; font-size: 1em; margin-top: 10px;" onclick="signaturePad.clear()">Clear Signature</button>
-
-        <button class="btn" onclick="submitForm()">Continue</button>
+        <button class="btn" onclick="submitDetails()">Next</button>
         <button class="btn btn-secondary" onclick="showScreen('type-screen')">Cancel</button>
     </div>
 
-    <div id="terms-screen" class="view">
-        <h2>Contractor Safety & Terms</h2>
-        <p style="text-align: left; margin-bottom: 10px;">Please read and accept the following terms to complete your sign-in:</p>
-        
-        <div style="height: 40vh; overflow-y: scroll; border: 1px solid #ccc; padding: 15px; font-size: 1em; background: #fff; border-radius: 6px; text-align: left; line-height: 1.5;">
-            <p><strong>1. Safety Induction</strong><br>All contractors must adhere to Foster + Freeman on-site safety protocols at all times.</p>
-            <p><strong>2. Liability</strong><br>The contractor assumes full responsibility for their equipment and actions while on premises.</p>
-            <p><strong>3. Work Permits</strong><br>Hot work or hazardous tasks require a separate permit authorized by your F+F contact.</p>
-        </div>
-        
+    <div id="document-screen" class="view">
+        <h2 id="doc-title">Document</h2>
+        <p style="text-align: left; margin-bottom: 10px;">Please read and accept to proceed:</p>
+        <div id="doc-text" style="height: 40vh; overflow-y: scroll; border: 1px solid #ccc; padding: 15px; font-size: 1em; background: #fff; border-radius: 6px; text-align: left; line-height: 1.5; white-space: pre-wrap;"></div>
         <div style="margin-top: 20px;">
-            <button class="btn btn-half btn-accept" onclick="acceptTerms()">I Accept</button>
+            <button class="btn btn-half btn-accept" onclick="acceptCurrentDocument()">I Accept</button>
             <button class="btn btn-half btn-decline" onclick="declineTerms()">Decline</button>
         </div>
+    </div>
+
+    <div id="signature-screen" class="view">
+        <h2>Signature</h2>
+        <p>Please sign below to complete your entry:</p>
+        <canvas id="signature-pad"></canvas>
+        <button class="btn btn-secondary" style="padding: 10px; font-size: 1em; margin-top: 10px;" onclick="signaturePad.clear()">Clear Signature</button>
+        <button class="btn" onclick="finalizeSignIn()">Finalize Sign In</button>
+    </div>
+
+    <div id="decline-screen" class="view">
+        <h2 style="color: #dc3545;">Assistance Required</h2>
+        <p>You have declined the terms for: <br><strong id="declined-doc-name"></strong></p>
+        <p style="font-size: 1.2em; margin-top: 20px;">Please wait here.</p>
+        <p>A member of staff has been notified and will be with you shortly to assist.</p>
     </div>
 
     <div id="signout-screen" class="view">
@@ -158,17 +163,21 @@
     <script>
         let currentVisitorType = '';
         let html5QrCode;
+        let currentDocIndex = 0;
         const canvas = document.getElementById('signature-pad');
         const signaturePad = new SignaturePad(canvas);
 
-        // --- FOCUS BLUR CODE ---
-        signaturePad.onBegin = function() {
-            if (document.activeElement) {
-                document.activeElement.blur();
-            }
-        };
-
         const CLOUD_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE"; 
+
+        const contractorDocuments = [
+            { title: "1. Safety Induction", text: "All contractors must adhere to Foster + Freeman on-site safety protocols at all times. High visibility clothing must be worn in designated areas. Report any hazards immediately to your F+F contact." },
+            { title: "2. Liability & Equipment", text: "The contractor assumes full responsibility for their equipment, tools, and actions while on premises. F+F is not liable for lost or damaged personal property." },
+            { title: "3. Work Permits", text: "Hot work, electrical work, or working at heights require a separate, specific permit authorized by your F+F contact before work commences." }
+        ];
+
+        signaturePad.onBegin = function() {
+            if (document.activeElement) document.activeElement.blur();
+        };
 
         function showScreen(screenId) {
             document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
@@ -176,28 +185,77 @@
         }
 
         function resizeCanvas() {
-            const ratio =  Math.max(window.devicePixelRatio || 1, 1);
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
             canvas.width = canvas.offsetWidth * ratio;
             canvas.height = canvas.offsetHeight * ratio;
             canvas.getContext("2d").scale(ratio, ratio);
             signaturePad.clear(); 
         }
         window.onresize = resizeCanvas;
-        resizeCanvas();
 
         function startForm(type) {
             currentVisitorType = type;
             document.getElementById('form-title').innerText = type + ' Sign In';
-            
-            // Clear inputs on start
             document.getElementById('name').value = '';
             document.getElementById('company').value = '';
             document.getElementById('vehicle').value = '';
             document.getElementById('contact').value = '';
             signaturePad.clear();
-            
             showScreen('form-screen');
-            setTimeout(resizeCanvas, 100); 
+        }
+
+        function submitDetails() {
+            const name = document.getElementById('name').value.trim();
+            const company = document.getElementById('company').value.trim();
+            const contact = document.getElementById('contact').value.trim();
+
+            if(!name || !company || !contact) {
+                alert("Please fill in all required fields.");
+                return;
+            }
+
+            if (currentVisitorType === 'Contractor') {
+                currentDocIndex = 0;
+                loadDocument();
+            } else {
+                showScreen('signature-screen');
+                setTimeout(resizeCanvas, 100);
+            }
+        }
+
+        function loadDocument() {
+            document.getElementById('doc-title').innerText = contractorDocuments[currentDocIndex].title;
+            document.getElementById('doc-text').innerText = contractorDocuments[currentDocIndex].text;
+            showScreen('document-screen');
+        }
+
+        function acceptCurrentDocument() {
+            currentDocIndex++;
+            if (currentDocIndex < contractorDocuments.length) {
+                loadDocument();
+            } else {
+                showScreen('signature-screen');
+                setTimeout(resizeCanvas, 100);
+            }
+        }
+
+        function declineTerms() {
+            const name = document.getElementById('name').value.trim();
+            const company = document.getElementById('company').value.trim();
+            const contact = document.getElementById('contact').value.trim();
+            const declinedTitle = contractorDocuments[currentDocIndex].title;
+
+            document.getElementById('declined-doc-name').innerText = declinedTitle;
+            showScreen('decline-screen');
+
+            sendToCloud({
+                name: name,
+                company: company,
+                contact: contact,
+                declinedDoc: declinedTitle
+            }, null, "DeclineNotify");
+
+            setTimeout(() => { showScreen('home-screen'); }, 15000); 
         }
 
         async function generateContractorPDF(data) {
@@ -207,18 +265,25 @@
             const timestamp = now.toLocaleDateString() + " " + now.toLocaleTimeString();
             const logoImg = new Image();
             logoImg.src = 'assets/logo.jpeg';
-            doc.addImage(logoImg, 'PNG', 85, 5, 40, 15); 
-            doc.setFontSize(22);
-            doc.text("Foster + Freeman", 105, 20, { align: "center" });
-            doc.text("Contractor Induction & Agreement", 105, 30, { align: "center" });
-            doc.setFontSize(12);
-            doc.text(`Date/Time: ${timestamp}`, 20, 50);
-            doc.text(`Name: ${data.name}`, 20, 60);
-            doc.text(`Company: ${data.company}`, 20, 70);
-            doc.text(`Vehicle Reg: ${data.vehicle || "N/A"}`, 20, 80);
-            doc.text(`F+F Contact: ${data.contact}`, 20, 90);
-            doc.text("Signature:", 20, 160);
-            doc.addImage(data.signature, 'PNG', 20, 165, 70, 30); 
+
+            contractorDocuments.forEach((docItem, index) => {
+                if (index > 0) doc.addPage();
+                doc.addImage(logoImg, 'PNG', 85, 5, 40, 15); 
+                doc.setFontSize(18);
+                doc.text("Foster + Freeman Contractor Agreement", 105, 30, { align: "center" });
+                doc.setFontSize(14);
+                doc.text(docItem.title, 20, 45);
+                doc.setFontSize(10);
+                const splitText = doc.splitTextToSize(docItem.text, 170);
+                doc.text(splitText, 20, 55);
+                doc.setFontSize(12);
+                doc.text("--- AGREEMENT ACCEPTED & STAMPED ---", 105, 180, { align: "center" });
+                doc.setFontSize(10);
+                doc.text(`Name: ${data.name} | Company: ${data.company}`, 20, 190);
+                doc.text(`F+F Contact: ${data.contact} | Date: ${timestamp}`, 20, 195);
+                doc.text("Signature:", 120, 190);
+                doc.addImage(data.signature, 'PNG', 120, 192, 40, 15); 
+            });
             return doc.output('datauristring').split(',')[1]; 
         }
 
@@ -232,33 +297,9 @@
             } catch (err) { console.error("Cloud sync failed:", err); }
         }
 
-        function submitForm() {
-            const name = document.getElementById('name').value.trim();
-            const company = document.getElementById('company').value.trim();
-            const contact = document.getElementById('contact').value.trim();
-
-            if(!name || !company || !contact || signaturePad.isEmpty()) {
-                alert("Please fill in all required fields and sign the pad.");
-                return;
-            }
-
-            if (currentVisitorType === 'Contractor') {
-                showScreen('terms-screen');
-            } else {
-                finalizeSignIn();
-            }
-        }
-
-        function declineTerms() {
-            alert("You must accept the terms and conditions to sign in as a contractor.");
-            showScreen('type-screen');
-        }
-
-        function acceptTerms() {
-            finalizeSignIn();
-        }
-
         async function finalizeSignIn() {
+            if(signaturePad.isEmpty()) return alert("Please sign the pad.");
+
             const data = {
                 type: currentVisitorType,
                 name: document.getElementById('name').value.trim(),
@@ -268,14 +309,11 @@
                 signature: signaturePad.toDataURL() 
             };
 
-            // Set personalized message
-            document.getElementById('thankyou-msg').innerText = `Thank you ${data.name}, please collect and attach your ID label and Welcome to F+F`;
+            document.getElementById('thankyou-msg').innerText = `Thank you ${data.name}, please collect your ID label and Welcome to F+F`;
             showScreen('thankyou-screen');
 
             let pdfStr = null;
-            if (currentVisitorType === 'Contractor') {
-                pdfStr = await generateContractorPDF(data);
-            }
+            if (currentVisitorType === 'Contractor') pdfStr = await generateContractorPDF(data);
 
             sendToCloud(data, pdfStr, "SignIn");
 
@@ -286,58 +324,47 @@
             const qrContainer = document.getElementById("lbl-qr");
             qrContainer.innerHTML = ""; 
             new QRCode(qrContainer, {
-                text: data.name, 
+                text: `${data.name}|${data.type}`, 
                 width: 60, height: 60
             });
 
             setTimeout(() => {
                 window.print(); 
-                
-                // --- RESET COMMAND ---
-                setTimeout(() => { 
-                    showScreen('home-screen'); 
-                    // Clear all data
-                    document.getElementById('name').value = "";
-                    document.getElementById('company').value = "";
-                    document.getElementById('contact').value = "";
-                    document.getElementById('vehicle').value = "";
-                    signaturePad.clear();
-                }, 6000);
+                setTimeout(() => { showScreen('home-screen'); signaturePad.clear(); }, 6000);
             }, 500); 
         }
 
         async function startScanner() {
             showScreen('signout-screen');
-            document.getElementById('signout-name').value = ''; 
             html5QrCode = new Html5Qrcode("reader");
-            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
             try {
                 await html5QrCode.start(
                     { facingMode: "user" }, 
-                    config,
-                    (decodedText) => {
-                        processSignOut(decodedText); 
-                        stopScanner();
-                    }
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    (decodedText) => { processSignOut(decodedText); stopScanner(); }
                 );
-            } catch (err) { console.error("Camera start error:", err); }
+            } catch (err) { console.error(err); }
         }
 
         function stopScanner() {
             if (html5QrCode && html5QrCode.isScanning) {
-                html5QrCode.stop().then(() => {
-                    html5QrCode.clear();
-                    showScreen('home-screen');
-                });
-            } else {
-                showScreen('home-screen');
-            }
+                html5QrCode.stop().then(() => { html5QrCode.clear(); showScreen('home-screen'); });
+            } else { showScreen('home-screen'); }
         }
 
         function processSignOut(identifier) {
             identifier = identifier.trim();
             if(!identifier) return alert("Please scan a code or enter a name.");
-            sendToCloud({ name: identifier, type: "Unknown" }, null, "SignOut");
+            
+            let nameToOut = identifier;
+            let typeToOut = "Unknown";
+            if (identifier.includes('|')) {
+                const parts = identifier.split('|');
+                nameToOut = parts[0];
+                typeToOut = parts[1];
+            }
+            
+            sendToCloud({ name: nameToOut, type: typeToOut }, null, "SignOut");
             document.getElementById('thankyou-msg').innerText = "Thank you and goodbye!";
             showScreen('thankyou-screen');
             setTimeout(() => { showScreen('home-screen'); }, 4000);
