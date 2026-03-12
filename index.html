@@ -2,19 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>foster+freeman Visitor Kiosk</title>
-            <link rel="manifest" href="manifest.json">
-        <script>
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('sw.js');
-            }
-        </script>
     
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="mobile-web-app-capable" content="yes">
-
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -50,9 +40,15 @@
         .btn:hover { background-color: #8ebd84; }
         .btn-secondary { background-color: #6c757d; }
         
-        .btn-half { width: 48%; display: inline-block; margin: 10px 1%; }
+        .btn-half {
+            width: 48%;
+            display: inline-block;
+            margin: 10px 1%;
+        }
         .btn-accept { background-color: #28a745; }
+        .btn-accept:hover { background-color: #218838; }
         .btn-decline { background-color: #dc3545; }
+        .btn-decline:hover { background-color: #c82333; }
 
         input[type="text"] {
             width: 90%; padding: 15px; margin: 10px 0; font-size: 1.2em;
@@ -61,7 +57,6 @@
         canvas { border: 2px dashed #ccc; border-radius: 8px; width: 100%; height: 200px; touch-action: none; }
         .label { text-align: left; font-weight: bold; margin-top: 10px; display: block; }
         
-        /* --- CRITICAL PRINT OVERRIDES (54mm x 86mm) --- */
         @media print {
             @page {
                 size: 54mm 86mm;
@@ -85,7 +80,7 @@
 <body>
 
     <div id="home-screen" class="view active">
-        <img src="assets/logo.jpeg" alt="Logo" style="width: 250px; margin-bottom: 5px; height: auto;">
+        <img src="assets/logo.jpeg" alt="Foster + Freeman Logo" style="width: 250px; margin-bottom: 5px; height: auto;">
         <h1>Welcome</h1>
         <button class="btn" onclick="showScreen('type-screen')">Sign In</button>
         <button class="btn btn-secondary" onclick="startScanner()">Sign Out</button>
@@ -115,11 +110,14 @@
 
     <div id="terms-screen" class="view">
         <h2>Contractor Safety & Terms</h2>
+        <p style="text-align: left; margin-bottom: 10px;">Please read and accept the following terms to complete your sign-in:</p>
+        
         <div style="height: 40vh; overflow-y: scroll; border: 1px solid #ccc; padding: 15px; font-size: 1em; background: #fff; border-radius: 6px; text-align: left; line-height: 1.5;">
-            <p><strong>1. Safety Induction</strong><br>Follow Foster + Freeman onsite protocols.</p>
-            <p><strong>2. Liability</strong><br>Contractor assumes full responsibility.</p>
-            <p><strong>3. Work Permits</strong><br>Hazardous tasks require authorization.</p>
+            <p><strong>1. Safety Induction</strong><br>All contractors must adhere to Foster + Freeman on-site safety protocols at all times.</p>
+            <p><strong>2. Liability</strong><br>The contractor assumes full responsibility for their equipment and actions while on premises.</p>
+            <p><strong>3. Work Permits</strong><br>Hot work or hazardous tasks require a separate permit authorized by your F+F contact.</p>
         </div>
+        
         <div style="margin-top: 20px;">
             <button class="btn btn-half btn-accept" onclick="acceptTerms()">I Accept</button>
             <button class="btn btn-half btn-decline" onclick="declineTerms()">Decline</button>
@@ -128,8 +126,10 @@
 
     <div id="signout-screen" class="view">
         <h2>Sign Out</h2>
+        <p>Hold your badge QR code up to the camera</p>
         <div id="reader" style="width: 100%; max-width: 400px; margin: auto; border-radius: 10px; overflow: hidden; background: #000;"></div>
         <div style="margin-top: 20px;">
+            <p>OR enter name manually:</p>
             <input type="text" id="signout-name" placeholder="Enter Name">
             <button class="btn" onclick="processSignOut(document.getElementById('signout-name').value)">Sign Out</button>
         </div>
@@ -137,19 +137,19 @@
     </div>
 
     <div id="thankyou-screen" class="view">
-        <h2 id="thankyou-msg" style="line-height: 1.4;"></h2>
-        <p style="margin-top: 20px; color: #666;">Returning to home screen shortly...</p>
+        <h2 id="thankyou-msg">Thank you!</h2>
+        <p>Returning to home screen shortly...</p>
     </div>
 
     <div id="print-area" style="display: none;">
-        <div id="label-content" style="width: 54mm; height: 86mm; border: 1.5pt solid black; box-sizing: border-box; padding: 3mm; display: flex; flex-direction: column; align-items: center; justify-content: space-between; background: white; overflow: hidden;">
-            <img src="assets/logo.jpeg" style="width: 32mm; height: auto; margin-top: 1mm;">
+        <div id="label-content" style="width: 54mm; height: 86mm; border: 1.5pt solid black; box-sizing: border-box; padding: 4mm; display: flex; flex-direction: column; align-items: center; justify-content: space-between; background: white; overflow: hidden;">
+            <img src="assets/logo.jpeg" style="width: 35mm; height: auto; margin-top: 2mm;">
             <div style="text-align: center; width: 100%;">
-                <h2 id="lbl-name" style="margin: 0; font-size: 14pt; text-transform: uppercase; line-height: 1.1;"></h2>
+                <h2 id="lbl-name" style="margin: 0; font-size: 14pt; text-transform: uppercase; line-height: 1.2;"></h2>
                 <p id="lbl-company" style="margin: 1mm 0; font-size: 10pt; font-weight: bold;"></p>
             </div>
             <div id="lbl-qr" style="display: block; margin: 0 auto;"></div>
-            <div style="width: 100%; border-top: 1pt solid #000; padding-top: 1mm; margin-bottom: 1mm;">
+            <div style="width: 100%; border-top: 1pt solid #000; padding-top: 1mm; margin-bottom: 2mm;">
                 <p id="lbl-type" style="font-size: 8pt; margin: 0; font-weight: bold;"></p>
             </div>
         </div>
@@ -160,6 +160,14 @@
         let html5QrCode;
         const canvas = document.getElementById('signature-pad');
         const signaturePad = new SignaturePad(canvas);
+
+        // --- FOCUS BLUR CODE ---
+        signaturePad.onBegin = function() {
+            if (document.activeElement) {
+                document.activeElement.blur();
+            }
+        };
+
         const CLOUD_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE"; 
 
         function showScreen(screenId) {
@@ -168,7 +176,7 @@
         }
 
         function resizeCanvas() {
-            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            const ratio =  Math.max(window.devicePixelRatio || 1, 1);
             canvas.width = canvas.offsetWidth * ratio;
             canvas.height = canvas.offsetHeight * ratio;
             canvas.getContext("2d").scale(ratio, ratio);
@@ -180,7 +188,14 @@
         function startForm(type) {
             currentVisitorType = type;
             document.getElementById('form-title').innerText = type + ' Sign In';
+            
+            // Clear inputs on start
+            document.getElementById('name').value = '';
+            document.getElementById('company').value = '';
+            document.getElementById('vehicle').value = '';
+            document.getElementById('contact').value = '';
             signaturePad.clear();
+            
             showScreen('form-screen');
             setTimeout(resizeCanvas, 100); 
         }
@@ -188,10 +203,21 @@
         async function generateContractorPDF(data) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
+            const now = new Date();
+            const timestamp = now.toLocaleDateString() + " " + now.toLocaleTimeString();
             const logoImg = new Image();
             logoImg.src = 'assets/logo.jpeg';
             doc.addImage(logoImg, 'PNG', 85, 5, 40, 15); 
+            doc.setFontSize(22);
+            doc.text("Foster + Freeman", 105, 20, { align: "center" });
+            doc.text("Contractor Induction & Agreement", 105, 30, { align: "center" });
+            doc.setFontSize(12);
+            doc.text(`Date/Time: ${timestamp}`, 20, 50);
             doc.text(`Name: ${data.name}`, 20, 60);
+            doc.text(`Company: ${data.company}`, 20, 70);
+            doc.text(`Vehicle Reg: ${data.vehicle || "N/A"}`, 20, 80);
+            doc.text(`F+F Contact: ${data.contact}`, 20, 90);
+            doc.text("Signature:", 20, 160);
             doc.addImage(data.signature, 'PNG', 20, 165, 70, 30); 
             return doc.output('datauristring').split(',')[1]; 
         }
@@ -199,22 +225,38 @@
         async function sendToCloud(data, pdfBase64, action = "SignIn") {
             if (CLOUD_URL === "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") return;
             const payload = { ...data, action: action, pdf: pdfBase64 };
-            try { await fetch(CLOUD_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) }); } catch (err) {}
+            try {
+                await fetch(CLOUD_URL, {
+                    method: "POST", mode: "no-cors", body: JSON.stringify(payload)
+                });
+            } catch (err) { console.error("Cloud sync failed:", err); }
         }
 
         function submitForm() {
             const name = document.getElementById('name').value.trim();
             const company = document.getElementById('company').value.trim();
-            if(!name || !company || signaturePad.isEmpty()) {
-                alert("Please fill in all fields and sign.");
+            const contact = document.getElementById('contact').value.trim();
+
+            if(!name || !company || !contact || signaturePad.isEmpty()) {
+                alert("Please fill in all required fields and sign the pad.");
                 return;
             }
-            if (currentVisitorType === 'Contractor') { showScreen('terms-screen'); } 
-            else { finalizeSignIn(); }
+
+            if (currentVisitorType === 'Contractor') {
+                showScreen('terms-screen');
+            } else {
+                finalizeSignIn();
+            }
         }
 
-        function declineTerms() { showScreen('type-screen'); }
-        function acceptTerms() { finalizeSignIn(); }
+        function declineTerms() {
+            alert("You must accept the terms and conditions to sign in as a contractor.");
+            showScreen('type-screen');
+        }
+
+        function acceptTerms() {
+            finalizeSignIn();
+        }
 
         async function finalizeSignIn() {
             const data = {
@@ -226,52 +268,79 @@
                 signature: signaturePad.toDataURL() 
             };
 
-            // Set Personalized Message
+            // Set personalized message
             document.getElementById('thankyou-msg').innerText = `Thank you ${data.name}, please collect and attach your ID label and Welcome to F+F`;
             showScreen('thankyou-screen');
 
-            // Setup Print Label
+            let pdfStr = null;
+            if (currentVisitorType === 'Contractor') {
+                pdfStr = await generateContractorPDF(data);
+            }
+
+            sendToCloud(data, pdfStr, "SignIn");
+
             document.getElementById("lbl-name").innerText = data.name;
             document.getElementById("lbl-company").innerText = data.company;
-            document.getElementById("lbl-type").innerText = "foster+freeman " + currentVisitorType;
+            document.getElementById("lbl-type").innerText = "F+F " + currentVisitorType;
             
             const qrContainer = document.getElementById("lbl-qr");
             qrContainer.innerHTML = ""; 
-            new QRCode(qrContainer, { text: data.name, width: 85, height: 85 });
+            new QRCode(qrContainer, {
+                text: data.name, 
+                width: 60, height: 60
+            });
 
-            // Background processing
-            let pdfStr = (currentVisitorType === 'Contractor') ? await generateContractorPDF(data) : null;
-            sendToCloud(data, pdfStr, "SignIn");
-
-            // Auto Print
             setTimeout(() => {
                 window.print(); 
-                setTimeout(() => { showScreen('home-screen'); }, 6000);
-            }, 800); 
+                
+                // --- RESET COMMAND ---
+                setTimeout(() => { 
+                    showScreen('home-screen'); 
+                    // Clear all data
+                    document.getElementById('name').value = "";
+                    document.getElementById('company').value = "";
+                    document.getElementById('contact').value = "";
+                    document.getElementById('vehicle').value = "";
+                    signaturePad.clear();
+                }, 6000);
+            }, 500); 
         }
 
         async function startScanner() {
             showScreen('signout-screen');
+            document.getElementById('signout-name').value = ''; 
             html5QrCode = new Html5Qrcode("reader");
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
             try {
-                await html5QrCode.start({ facingMode: "user" }, { fps: 10, qrbox: 250 }, (decodedText) => {
-                    processSignOut(decodedText); 
-                    stopScanner();
-                });
-            } catch (err) {}
+                await html5QrCode.start(
+                    { facingMode: "user" }, 
+                    config,
+                    (decodedText) => {
+                        processSignOut(decodedText); 
+                        stopScanner();
+                    }
+                );
+            } catch (err) { console.error("Camera start error:", err); }
         }
 
         function stopScanner() {
             if (html5QrCode && html5QrCode.isScanning) {
-                html5QrCode.stop().then(() => { html5QrCode.clear(); showScreen('home-screen'); });
-            } else { showScreen('home-screen'); }
+                html5QrCode.stop().then(() => {
+                    html5QrCode.clear();
+                    showScreen('home-screen');
+                });
+            } else {
+                showScreen('home-screen');
+            }
         }
 
         function processSignOut(identifier) {
+            identifier = identifier.trim();
+            if(!identifier) return alert("Please scan a code or enter a name.");
             sendToCloud({ name: identifier, type: "Unknown" }, null, "SignOut");
             document.getElementById('thankyou-msg').innerText = "Thank you and goodbye!";
             showScreen('thankyou-screen');
-            setTimeout(() => { showScreen('home-screen'); }, 3000);
+            setTimeout(() => { showScreen('home-screen'); }, 4000);
         }
     </script>
 </body>
