@@ -50,7 +50,7 @@
             max-width: 550px;
             padding: 30px;
             border-radius: 12px;
-            max-height: 85vh;
+            max-height: 90vh;
             display: flex;
             flex-direction: column;
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
@@ -63,19 +63,19 @@
             letter-spacing: 1px;
             margin-bottom: 5px;
         }
-        .doc-paper {
-            text-align: left;
+        .doc-viewer-container {
+            text-align: center;
             overflow-y: auto;
             border: 1px solid #ddd;
-            padding: 25px;
             background: #fdfdfd;
             flex-grow: 1;
             margin-bottom: 20px;
-            line-height: 1.6;
-            white-space: pre-wrap;
-            font-size: 1.1em;
-            color: #444;
             border-radius: 4px;
+        }
+        .doc-viewer-container img {
+            width: 100%;
+            height: auto;
+            display: block;
         }
 
         .btn {
@@ -135,8 +135,10 @@
     <div id="document-modal" class="modal-overlay">
         <div class="modal-content">
             <div id="doc-progress" class="progress-text">Document 1 of 3</div>
-            <h2 id="doc-title" style="margin-top:5px; color: var(--accent);">Document</h2>
-            <div id="doc-text" class="doc-paper"></div>
+            <h2 id="doc-title" style="margin-top:5px; color: var(--accent);">Document Title</h2>
+            <div id="doc-viewer" class="doc-viewer-container">
+                <img id="doc-image" src="" alt="Induction Document">
+            </div>
             <div style="display: flex; justify-content: space-between;">
                 <button class="btn btn-half btn-decline" onclick="declineTerms()">Decline</button>
                 <button class="btn btn-half btn-accept" onclick="acceptCurrentDocument()">I Accept</button>
@@ -199,10 +201,23 @@
 
         const CLOUD_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE"; 
 
+        // Change "file" to your actual GitHub asset paths
         const contractorDocuments = [
-            { title: "1. Safety Induction", text: "All contractors must adhere to Foster + Freeman on-site safety protocols at all times. High visibility clothing must be worn in designated areas. Report any hazards immediately to your F+F contact." },
-            { title: "2. Liability & Equipment", text: "The contractor assumes full responsibility for their equipment, tools, and actions while on premises. F+F is not liable for lost or damaged personal property." },
-            { title: "3. Work Permits", text: "Hot work, electrical work, or working at heights require a separate, specific permit authorized by your F+F contact before work commences." }
+            { 
+                title: "1. FF156 Contractors Rules", 
+                file: "assets/FF156   Contractors Rules v2.0.jpg", 
+                text: "Contractor has read and accepted the Health & Safety Induction policy." 
+            },
+            { 
+                title: "2. Fire Safety & Assembly", 
+                file: "assets/induction_2.jpg", 
+                text: "Contractor has read and accepted the Fire Safety procedures." 
+            },
+            { 
+                title: "3. Site Rules & Permits", 
+                file: "assets/induction_3.jpg", 
+                text: "Contractor has read and accepted the General Site Rules and Permit requirements." 
+            }
         ];
 
         signaturePad.onBegin = function() {
@@ -256,10 +271,14 @@
 
         function loadDocument() {
             const totalDocs = contractorDocuments.length;
+            const currentDoc = contractorDocuments[currentDocIndex];
+            
             document.getElementById('doc-progress').innerText = `Document ${currentDocIndex + 1} of ${totalDocs}`;
-            document.getElementById('doc-title').innerText = contractorDocuments[currentDocIndex].title;
-            document.getElementById('doc-text').innerText = contractorDocuments[currentDocIndex].text;
+            document.getElementById('doc-title').innerText = currentDoc.title;
+            document.getElementById('doc-image').src = currentDoc.file;
+            
             document.getElementById('document-modal').style.display = 'flex';
+            document.getElementById('doc-viewer').scrollTop = 0;
         }
 
         function acceptCurrentDocument() {
@@ -308,16 +327,17 @@
                 doc.text("Foster + Freeman Contractor Agreement", 105, 30, { align: "center" });
                 doc.setFontSize(14);
                 doc.text(docItem.title, 20, 45);
-                doc.setFontSize(10);
+                doc.setFontSize(11);
                 const splitText = doc.splitTextToSize(docItem.text, 170);
                 doc.text(splitText, 20, 55);
+                
                 doc.setFontSize(12);
-                doc.text("--- AGREEMENT ACCEPTED & STAMPED ---", 105, 180, { align: "center" });
+                doc.text("--- DIGITAL ACCEPTANCE STAMP ---", 105, 180, { align: "center" });
                 doc.setFontSize(10);
-                doc.text(`Name: ${data.name} | Company: ${data.company}`, 20, 190);
-                doc.text(`F+F Contact: ${data.contact} | Date: ${timestamp}`, 20, 195);
-                doc.text("Signature:", 120, 190);
-                doc.addImage(data.signature, 'PNG', 120, 192, 40, 15); 
+                doc.text(`Signed by: ${data.name}`, 20, 190);
+                doc.text(`Company: ${data.company}`, 20, 195);
+                doc.text(`Date/Time: ${timestamp}`, 20, 200);
+                doc.addImage(data.signature, 'PNG', 130, 185, 50, 20); 
             });
             return doc.output('datauristring').split(',')[1]; 
         }
