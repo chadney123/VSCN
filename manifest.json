@@ -1,0 +1,15 @@
+{
+  "short_name": "F+F Kiosk",
+  "name": "foster+freeman Visitor Kiosk",
+  "icons": [
+    {
+      "src": "assets/logo.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#49ae34",
+  "background_color": "#49ae34"
+}
