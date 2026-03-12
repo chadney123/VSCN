@@ -15,6 +15,7 @@
             --primary: #49ae34; 
             --bg: #49ae34;
             --text: #333;
+            --accent: #2c3e50;
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -32,48 +33,75 @@
         h1 { font-size: 2.5em; margin-bottom: 10px; }
         .view { display: none; width: 100%; max-width: 600px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .active { display: block; }
+        
+        /* Modal Popup Styling */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 550px;
+            padding: 30px;
+            border-radius: 12px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .progress-text {
+            font-size: 0.9em;
+            color: #666;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        .doc-paper {
+            text-align: left;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 25px;
+            background: #fdfdfd;
+            flex-grow: 1;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            font-size: 1.1em;
+            color: #444;
+            border-radius: 4px;
+        }
+
         .btn {
             display: block; width: 100%; padding: 20px; margin: 15px 0;
             font-size: 1.5em; color: white; background-color: var(--primary);
             border: none; border-radius: 8px; cursor: pointer; transition: 0.3s;
         }
-        .btn:hover { background-color: #8ebd84; }
+        .btn:hover { background-color: #3e942c; }
         .btn-secondary { background-color: #6c757d; }
         
-        .btn-half {
-            width: 48%;
-            display: inline-block;
-            margin: 10px 1%;
-        }
+        .btn-half { width: 48%; display: inline-block; margin: 10px 1%; }
         .btn-accept { background-color: #28a745; }
-        .btn-accept:hover { background-color: #218838; }
         .btn-decline { background-color: #dc3545; }
-        .btn-decline:hover { background-color: #c82333; }
 
         input[type="text"] {
             width: 90%; padding: 15px; margin: 10px 0; font-size: 1.2em;
             border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;
         }
-        canvas { border: 2px dashed #ccc; border-radius: 8px; width: 100%; height: 200px; touch-action: none; }
-        .label { text-align: left; font-weight: bold; margin-top: 10px; display: block; }
+        canvas { border: 2px dashed #ccc; border-radius: 8px; width: 100%; height: 200px; touch-action: none; background: #fafafa; }
         
         @media print {
-            @page {
-                size: 54mm 86mm;
-                margin: 0;
-            }
+            @page { size: 54mm 86mm; margin: 0; }
             body { background: white; padding: 0; margin: 0; }
             body * { visibility: hidden; }
             #print-area, #print-area * { visibility: visible; }
-            #print-area { 
-                position: absolute; 
-                left: 0; 
-                top: 0; 
-                width: 54mm;
-                height: 86mm;
-                display: block !important; 
-            }
-            img { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            #print-area { position: absolute; left: 0; top: 0; width: 54mm; height: 86mm; display: block !important; }
         }
     </style>
 </head>
@@ -104,13 +132,15 @@
         <button class="btn btn-secondary" onclick="showScreen('type-screen')">Cancel</button>
     </div>
 
-    <div id="document-screen" class="view">
-        <h2 id="doc-title">Document</h2>
-        <p style="text-align: left; margin-bottom: 10px;">Please read and accept to proceed:</p>
-        <div id="doc-text" style="height: 40vh; overflow-y: scroll; border: 1px solid #ccc; padding: 15px; font-size: 1em; background: #fff; border-radius: 6px; text-align: left; line-height: 1.5; white-space: pre-wrap;"></div>
-        <div style="margin-top: 20px;">
-            <button class="btn btn-half btn-accept" onclick="acceptCurrentDocument()">I Accept</button>
-            <button class="btn btn-half btn-decline" onclick="declineTerms()">Decline</button>
+    <div id="document-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div id="doc-progress" class="progress-text">Document 1 of 3</div>
+            <h2 id="doc-title" style="margin-top:5px; color: var(--accent);">Document</h2>
+            <div id="doc-text" class="doc-paper"></div>
+            <div style="display: flex; justify-content: space-between;">
+                <button class="btn btn-half btn-decline" onclick="declineTerms()">Decline</button>
+                <button class="btn btn-half btn-accept" onclick="acceptCurrentDocument()">I Accept</button>
+            </div>
         </div>
     </div>
 
@@ -182,6 +212,7 @@
         function showScreen(screenId) {
             document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
+            document.getElementById('document-modal').style.display = 'none';
         }
 
         function resizeCanvas() {
@@ -224,9 +255,11 @@
         }
 
         function loadDocument() {
+            const totalDocs = contractorDocuments.length;
+            document.getElementById('doc-progress').innerText = `Document ${currentDocIndex + 1} of ${totalDocs}`;
             document.getElementById('doc-title').innerText = contractorDocuments[currentDocIndex].title;
             document.getElementById('doc-text').innerText = contractorDocuments[currentDocIndex].text;
-            showScreen('document-screen');
+            document.getElementById('document-modal').style.display = 'flex';
         }
 
         function acceptCurrentDocument() {
@@ -234,6 +267,7 @@
             if (currentDocIndex < contractorDocuments.length) {
                 loadDocument();
             } else {
+                document.getElementById('document-modal').style.display = 'none';
                 showScreen('signature-screen');
                 setTimeout(resizeCanvas, 100);
             }
@@ -245,6 +279,7 @@
             const contact = document.getElementById('contact').value.trim();
             const declinedTitle = contractorDocuments[currentDocIndex].title;
 
+            document.getElementById('document-modal').style.display = 'none';
             document.getElementById('declined-doc-name').innerText = declinedTitle;
             showScreen('decline-screen');
 
