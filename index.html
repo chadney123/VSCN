@@ -11,102 +11,28 @@
     <script src="https://unpkg.com/html5-qrcode"></script>
     
     <style>
-        :root {
-            --primary: #49ae34; 
-            --bg: #49ae34;
-            --text: #333;
-            --accent: #2c3e50;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            text-align: center;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 95vh;
-        }
+        :root { --primary: #49ae34; --bg: #49ae34; --text: #333; --accent: #2c3e50; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); color: var(--text); text-align: center; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 95vh; }
         h1 { font-size: 2.5em; margin-bottom: 10px; }
         .view { display: none; width: 100%; max-width: 600px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .active { display: block; }
         
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-content {
-            background: white;
-            width: 90%;
-            max-width: 550px;
-            padding: 30px;
-            border-radius: 12px;
-            max-height: 90vh;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-        .progress-text {
-            font-size: 0.9em;
-            color: #666;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
-        }
-        .doc-viewer-container {
-            text-align: center;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            background: #fdfdfd;
-            flex-grow: 1;
-            margin-bottom: 20px;
-            border-radius: 4px;
-        }
-        .doc-viewer-container img { width: 100%; height: auto; display: block; }
-
-        .btn {
-            display: block; width: 100%; padding: 20px; margin: 15px 0;
-            font-size: 1.5em; color: white; background-color: var(--primary);
-            border: none; border-radius: 8px; cursor: pointer; transition: 0.3s;
-        }
-        .btn:hover { background-color: #3e942c; }
+        .btn { display: block; width: 100%; padding: 20px; margin: 15px 0; font-size: 1.5em; color: white; background-color: var(--primary); border: none; border-radius: 8px; cursor: pointer; transition: 0.3s; }
         .btn-secondary { background-color: #6c757d; }
-        
-        .btn-re-signin {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: auto;
-            padding: 15px 25px;
-            font-size: 1.1em;
-            background-color: var(--accent);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            margin: 0;
-            z-index: 100;
-        }
+        .btn-re-signin { position: fixed; bottom: 20px; right: 20px; width: auto; padding: 15px 25px; font-size: 1.1em; background-color: var(--accent); margin: 0; z-index: 100; color: white; border-radius: 8px; border: none; }
 
-        .btn-half { width: 48%; display: inline-block; margin: 10px 1%; }
-        .btn-accept { background-color: #28a745; }
-        .btn-decline { background-color: #dc3545; }
-
-        input[type="text"] {
-            width: 90%; padding: 15px; margin: 10px 0; font-size: 1.2em;
-            border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;
-        }
+        input[type="text"] { width: 90%; padding: 15px; margin: 10px 0; font-size: 1.2em; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
         canvas { border: 2px dashed #ccc; border-radius: 8px; width: 100%; height: 200px; touch-action: none; background: #fafafa; }
         
+        /* Modal Induction Styling */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; width: 90%; max-width: 550px; padding: 30px; border-radius: 12px; max-height: 90vh; display: flex; flex-direction: column; }
+        .doc-viewer-container { text-align: center; overflow-y: auto; border: 1px solid #ddd; flex-grow: 1; margin-bottom: 20px; }
+        .doc-viewer-container img { width: 100%; height: auto; }
+        .btn-half { width: 48%; display: inline-block; margin: 10px 1%; }
+
         @media print {
             @page { size: 54mm 86mm; margin: 0; }
-            body { background: white; padding: 0; margin: 0; }
             body * { visibility: hidden; }
             #print-area, #print-area * { visibility: visible; }
             #print-area { position: absolute; left: 0; top: 0; width: 54mm; height: 86mm; display: block !important; }
@@ -116,7 +42,7 @@
 <body>
 
     <div id="home-screen" class="view active">
-        <img src="assets/logo.jpeg" alt="Foster + Freeman Logo" style="width: 250px; margin-bottom: 5px; height: auto;">
+        <img src="assets/logo.jpeg" alt="Logo" style="width: 250px; margin-bottom: 5px;">
         <h1>Welcome</h1>
         <button class="btn" onclick="showScreen('type-screen')">Sign In</button>
         <button class="btn btn-secondary" onclick="startScanner('SignOut')">Sign Out</button>
@@ -132,44 +58,25 @@
 
     <div id="form-screen" class="view">
         <h2 id="form-title">Sign In</h2>
-        <input type="text" id="name" placeholder="Full Name" required>
-        <input type="text" id="company" placeholder="Company Name" required>
+        <input type="text" id="name" placeholder="Full Name">
+        <input type="text" id="company" placeholder="Company Name">
         <input type="text" id="vehicle" placeholder="Vehicle Registration">
-        <input type="text" id="contact" placeholder="F+F Contact Person" required>
-        
+        <input type="text" id="contact" placeholder="F+F Contact Person">
         <button class="btn" onclick="submitDetails()">Next</button>
         <button class="btn btn-secondary" onclick="showScreen('home-screen')">Cancel</button>
     </div>
 
-    <div id="document-modal" class="modal-overlay">
-        <div class="modal-content">
-            <div id="doc-progress" class="progress-text">Document 1 of 3</div>
-            <h2 id="doc-title" style="margin-top:5px; color: var(--accent);">Document Title</h2>
-            <div id="doc-viewer" class="doc-viewer-container">
-                <img id="doc-image" src="" alt="Induction Document">
-            </div>
-            <div style="display: flex; justify-content: space-between;">
-                <button class="btn btn-half btn-decline" onclick="declineTerms()">Decline</button>
-                <button class="btn btn-half btn-accept" onclick="acceptCurrentDocument()">I Accept</button>
-            </div>
-        </div>
-    </div>
-
     <div id="signature-screen" class="view">
-        <h2>Signature</h2>
+        <h2 id="sig-welcome">Signature</h2>
         <p>Please sign below to complete your entry:</p>
         <canvas id="signature-pad"></canvas>
-        <button class="btn btn-secondary" style="padding: 10px; font-size: 1em; margin-top: 10px;" onclick="signaturePad.clear()">Clear Signature</button>
-        <button class="btn" onclick="finalizeSignIn()">Sign In</button>
+        <button class="btn" onclick="finalizeSignIn()">Complete Sign In</button>
+        <button class="btn btn-secondary" onclick="signaturePad.clear()">Clear</button>
     </div>
 
     <div id="scan-screen" class="view">
         <h2 id="scan-title">Scan Badge</h2>
         <div id="reader" style="width: 100%; max-width: 400px; margin: auto; border-radius: 10px; overflow: hidden; background: #000;"></div>
-        <div style="margin-top: 20px;">
-            <input type="text" id="scan-manual-name" placeholder="Enter Name">
-            <button class="btn" onclick="handleScanResult(document.getElementById('scan-manual-name').value)">Confirm</button>
-        </div>
         <button class="btn btn-secondary" onclick="stopScanner()">Back</button>
     </div>
 
@@ -178,148 +85,135 @@
         <p>Returning to home screen shortly...</p>
     </div>
 
-    <div id="print-area" style="display: none;">
-        <div id="label-content" style="width: 54mm; height: 86mm; border: 1.5pt solid black; box-sizing: border-box; padding: 4mm; display: flex; flex-direction: column; align-items: center; justify-content: space-between; background: white; overflow: hidden;">
-            <img src="assets/logo.jpeg" style="width: 35mm; height: auto; margin-top: 2mm;">
-            <div style="text-align: center; width: 100%;">
-                <h2 id="lbl-name" style="margin: 0; font-size: 14pt; text-transform: uppercase;"></h2>
-                <p id="lbl-company" style="margin: 1mm 0; font-size: 10pt; font-weight: bold;"></p>
-            </div>
-            <div id="lbl-qr" style="display: block; margin: 0 auto;"></div>
-            <div style="width: 100%; border-top: 1pt solid #000; padding-top: 1mm; margin-bottom: 2mm;">
-                <p id="lbl-type" style="font-size: 8pt; margin: 0; font-weight: bold;"></p>
+    <div id="document-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div id="doc-progress"></div>
+            <h2 id="doc-title"></h2>
+            <div id="doc-viewer" class="doc-viewer-container"><img id="doc-image" src=""></div>
+            <div style="display: flex; justify-content: space-between;">
+                <button class="btn btn-half btn-secondary" onclick="location.reload()">Decline</button>
+                <button class="btn btn-half" onclick="acceptCurrentDocument()">I Accept</button>
             </div>
         </div>
     </div>
 
+    <div id="print-area" style="display: none;">
+        <div id="label-content" style="width: 54mm; height: 86mm; border: 1pt solid black; padding: 4mm; display: flex; flex-direction: column; align-items: center; justify-content: space-between; background: white;">
+            <img src="assets/logo.jpeg" style="width: 35mm; height: auto;">
+            <div style="text-align: center;">
+                <h2 id="lbl-name" style="margin: 0; font-size: 14pt; text-transform: uppercase;"></h2>
+                <p id="lbl-company" style="margin: 1mm 0; font-size: 10pt; font-weight: bold;"></p>
+            </div>
+            <div id="lbl-qr"></div>
+            <p id="lbl-type" style="font-size: 8pt; font-weight: bold; border-top: 1pt solid black; width: 100%;"></p>
+        </div>
+    </div>
+
     <script>
-        let currentVisitorType = '';
+        let visitorData = {};
         let html5QrCode;
         let currentDocIndex = 0;
-        let scanMode = ''; 
-        let isReturningToday = false;
+        let isReturningVisitor = false;
         const canvas = document.getElementById('signature-pad');
         const signaturePad = new SignaturePad(canvas);
 
         const CLOUD_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE"; 
-
-        const contractorDocuments = [
-            { title: "1. FF156 Contractors Rules", file: "assets/FF156   Contractors Rules v2.0.jpg", text: "Rules accepted." },
-            { title: "2. FF157 Permit to Work", file: "assets/FF157   Permit to Work.jpg", text: "Permit accepted." },
-            { title: "3. FF158 Contractor H&S Induction Form", file: "assets/FF158   Contractor H&S Induction Form.jpg", text: "Induction accepted." }
+        const docs = [
+            { title: "FF156 Contractors Rules", file: "assets/FF156   Contractors Rules v2.0.jpg" },
+            { title: "FF157 Permit to Work", file: "assets/FF157   Permit to Work.jpg" },
+            { title: "FF158 Contractor H&S Induction", file: "assets/FF158   Contractor H&S Induction Form.jpg" }
         ];
 
-        function showScreen(screenId) {
-            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
+        function showScreen(id) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
         }
 
-        function startForm(type, name='', comp='', veh='', cont='') {
-            currentVisitorType = type;
+        function startForm(type) {
+            isReturningVisitor = false;
+            visitorData = { type: type };
             document.getElementById('form-title').innerText = type + ' Sign In';
-            document.getElementById('name').value = name;
-            document.getElementById('company').value = comp;
-            document.getElementById('vehicle').value = veh;
-            document.getElementById('contact').value = cont;
             showScreen('form-screen');
         }
 
         async function startScanner(mode) {
-            scanMode = mode;
             document.getElementById('scan-title').innerText = (mode === 'SignOut') ? "Sign Out" : "Re-Sign In";
             showScreen('scan-screen');
             html5QrCode = new Html5Qrcode("reader");
-            try {
-                await html5QrCode.start({ facingMode: "user" }, { fps: 10, qrbox: 250 }, (text) => handleScanResult(text));
-            } catch (err) { console.error(err); }
-        }
-
-        function handleScanResult(decodedText) {
-            if (html5QrCode) html5QrCode.stop().then(() => html5QrCode.clear());
-            
-            let parts = decodedText.split('|');
-            let name = parts[0] || '';
-            let type = parts[1] || 'Visitor';
-            let company = parts[2] || '';
-            let vehicle = parts[3] || '';
-            let contact = parts[4] || '';
-
-            if (scanMode === 'SignOut') {
-                processSignOut(name, type);
-            } else {
-                isReturningToday = true;
-                startForm(type, name, company, vehicle, contact);
-            }
+            await html5QrCode.start({ facingMode: "user" }, { fps: 10, qrbox: 250 }, (text) => {
+                html5QrCode.stop();
+                let p = text.split('|');
+                visitorData = { name: p[0], type: p[1], company: p[2], vehicle: p[3], contact: p[4] };
+                if (mode === 'SignOut') {
+                    sendToCloud(visitorData, "SignOut");
+                    showThankYou("Goodbye " + p[0]);
+                } else {
+                    isReturningVisitor = true;
+                    document.getElementById('sig-welcome').innerText = "Welcome back, " + p[0];
+                    showScreen('signature-screen');
+                    setTimeout(() => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; signaturePad.clear(); }, 100);
+                }
+            });
         }
 
         function submitDetails() {
-            const name = document.getElementById('name').value.trim();
-            const company = document.getElementById('company').value.trim();
-            const contact = document.getElementById('contact').value.trim();
-            if(!name || !company || !contact) return alert("Please fill in all required fields.");
+            visitorData.name = document.getElementById('name').value;
+            visitorData.company = document.getElementById('company').value;
+            visitorData.vehicle = document.getElementById('vehicle').value;
+            visitorData.contact = document.getElementById('contact').value;
+            if(!visitorData.name || !visitorData.company) return alert("Missing details");
 
-            if (currentVisitorType === 'Contractor') {
-                if (isReturningToday && confirm("Welcome back! Have you already completed your safety induction today?")) {
-                    showScreen('signature-screen');
-                    setTimeout(() => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; signaturePad.clear(); }, 100);
-                    return;
-                }
-                currentDocIndex = 0; loadDocument();
+            if (visitorData.type === 'Contractor') {
+                currentDocIndex = 0; loadDoc();
             } else {
                 showScreen('signature-screen');
                 setTimeout(() => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; signaturePad.clear(); }, 100);
             }
         }
 
-        function loadDocument() {
-            const doc = contractorDocuments[currentDocIndex];
-            document.getElementById('doc-progress').innerText = `Doc ${currentDocIndex + 1} of 3`;
-            document.getElementById('doc-title').innerText = doc.title;
-            document.getElementById('doc-image').src = doc.file;
+        function loadDoc() {
+            const d = docs[currentDocIndex];
+            document.getElementById('doc-progress').innerText = `Document ${currentDocIndex+1} of 3`;
+            document.getElementById('doc-title').innerText = d.title;
+            document.getElementById('doc-image').src = d.file;
             document.getElementById('document-modal').style.display = 'flex';
         }
 
         function acceptCurrentDocument() {
             currentDocIndex++;
-            if (currentDocIndex < 3) loadDocument();
-            else { document.getElementById('document-modal').style.display = 'none'; showScreen('signature-screen'); }
+            if (currentDocIndex < 3) loadDoc();
+            else {
+                document.getElementById('document-modal').style.display = 'none';
+                showScreen('signature-screen');
+                setTimeout(() => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; signaturePad.clear(); }, 100);
+            }
         }
 
-        async function finalizeSignIn() {
-            if(signaturePad.isEmpty()) return alert("Please sign.");
-            const data = {
-                type: currentVisitorType,
-                name: document.getElementById('name').value.trim(),
-                company: document.getElementById('company').value.trim(),
-                vehicle: document.getElementById('vehicle').value.trim(),
-                contact: document.getElementById('contact').value.trim(),
-                signature: signaturePad.toDataURL() 
-            };
-            showScreen('thankyou-screen');
-            sendToCloud(data, null, "SignIn");
-
-            document.getElementById("lbl-name").innerText = data.name;
-            document.getElementById("lbl-company").innerText = data.company;
-            document.getElementById("lbl-type").innerText = "F+F " + data.type;
+        function finalizeSignIn() {
+            if(signaturePad.isEmpty()) return alert("Please sign");
+            visitorData.signature = signaturePad.toDataURL();
+            sendToCloud(visitorData, "SignIn");
             
-            const qrContainer = document.getElementById("lbl-qr");
-            qrContainer.innerHTML = ""; 
-            // This line encodes all 5 data points for next time:
-            const qrString = `${data.name}|${data.type}|${data.company}|${data.vehicle}|${data.contact}`;
-            new QRCode(qrContainer, { text: qrString, width: 60, height: 60 });
-
-            setTimeout(() => { window.print(); setTimeout(() => location.reload(), 6000); }, 500); 
+            if (!isReturningVisitor) {
+                document.getElementById("lbl-name").innerText = visitorData.name;
+                document.getElementById("lbl-company").innerText = visitorData.company;
+                document.getElementById("lbl-type").innerText = "F+F " + visitorData.type;
+                const qrStr = `${visitorData.name}|${visitorData.type}|${visitorData.company}|${visitorData.vehicle}|${visitorData.contact}`;
+                document.getElementById("lbl-qr").innerHTML = "";
+                new QRCode(document.getElementById("lbl-qr"), { text: qrStr, width: 60, height: 60 });
+                window.print();
+            }
+            showThankYou("Thank you " + visitorData.name);
         }
 
-        function processSignOut(name, type) {
-            sendToCloud({ name: name, type: type }, null, "SignOut");
-            document.getElementById('thankyou-msg').innerText = "Goodbye!";
+        function showThankYou(msg) {
+            document.getElementById('thankyou-msg').innerText = msg;
             showScreen('thankyou-screen');
             setTimeout(() => location.reload(), 4000);
         }
 
-        function stopScanner() { if (html5QrCode) html5QrCode.stop().then(() => location.reload()); else location.reload(); }
-        async function sendToCloud(data, pdf, action) { if (CLOUD_URL !== "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") fetch(CLOUD_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ ...data, action: action }) }); }
+        function stopScanner() { if(html5QrCode) html5QrCode.stop().then(()=>location.reload()); else location.reload(); }
+        function sendToCloud(data, action) { if (CLOUD_URL !== "YOUR_URL") fetch(CLOUD_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ ...data, action: action }) }); }
     </script>
 </body>
 </html>
