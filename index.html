@@ -115,7 +115,7 @@
 <body>
 
     <div id="home-screen" class="view active">
-        <img src="assets/logo.jpeg" alt="Foster + Freeman Logo" style="width: 250px; margin-bottom: 5px; height: auto;">
+        <img src="assets/newlogo.jpeg" alt="Foster + Freeman Logo" style="width: 250px; margin-bottom: 5px; height: auto;">
         <h1>Welcome</h1>
         <button class="btn" onclick="showScreen('type-screen')">Sign In</button>
         <button class="btn btn-secondary" onclick="startScanner('SignOut')">Sign Out</button>
@@ -190,7 +190,7 @@
         <div id="label-content" style="width: 54mm; height: 86mm; border: 1.5pt solid black; box-sizing: border-box; padding: 4mm; display: flex; flex-direction: column; align-items: center; justify-content: space-between; background: white; overflow: hidden;">
             
             <div style="text-align: center; width: 100%;">
-                <img src="assets/logo.jpeg" style="width: 42mm; height: auto; margin-top: 0;">
+                <img src="assets/newlogo.jpeg" style="width: 42mm; height: auto; margin-top: 0;">
                 <div style="margin-top: 2mm;">
                     <h2 id="lbl-name" style="margin: 0; font-size: 16pt; text-transform: uppercase; line-height: 1.0;"></h2>
                     <p id="lbl-company" style="margin: 0; font-size: 11pt; font-weight: bold;"></p>
@@ -336,7 +336,7 @@
             const now = new Date();
             const timestamp = now.toLocaleDateString() + " " + now.toLocaleTimeString();
             const logoImg = new Image();
-            logoImg.src = 'assets/logo.jpeg';
+            logoImg.src = 'assets/newlogo.jpeg';
             contractorDocuments.forEach((docItem, index) => {
                 if (index > 0) doc.addPage();
                 doc.addImage(logoImg, 'PNG', 85, 5, 40, 15); 
