@@ -373,7 +373,14 @@
                 };
             }
             visitorData.signature = signaturePad.toDataURL(); 
-            document.getElementById('thankyou-msg').innerText = `Thank you ${visitorData.name}, Welcome to F+F`;
+
+            // Personalised Welcome Message
+            if (isReturningVisitor) {
+                document.getElementById('thankyou-msg').innerText = `Welcome back ${visitorData.name}`;
+            } else {
+                document.getElementById('thankyou-msg').innerText = `Thank you ${visitorData.name}, Welcome to F+F`;
+            }
+            
             showScreen('thankyou-screen');
 
             let pdfStr = null;
@@ -420,7 +427,10 @@
             let name = parts[0];
             if (scanMode === 'SignOut') {
                 sendToCloud({ name: name, type: parts[1] || 'Unknown' }, null, "SignOut");
-                document.getElementById('thankyou-msg').innerText = "Goodbye!";
+                
+                // Personalised Sign Out Message
+                document.getElementById('thankyou-msg').innerText = `Thank you ${name}`;
+                
                 showScreen('thankyou-screen');
                 setTimeout(() => { showScreen('home-screen'); }, 4000);
             } else {
