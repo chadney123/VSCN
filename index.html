@@ -373,14 +373,7 @@
                 };
             }
             visitorData.signature = signaturePad.toDataURL(); 
-
-            // Personalised Welcome Message
-            if (isReturningVisitor) {
-                document.getElementById('thankyou-msg').innerText = `Welcome back ${visitorData.name}`;
-            } else {
-                document.getElementById('thankyou-msg').innerText = `Thank you ${visitorData.name}, Welcome to F+F`;
-            }
-            
+            document.getElementById('thankyou-msg').innerText = `Thank you ${visitorData.name}, Welcome to F+F`;
             showScreen('thankyou-screen');
 
             let pdfStr = null;
@@ -395,6 +388,7 @@
                 qrContainer.innerHTML = ""; 
                 const qrString = `${visitorData.name}|${visitorData.type}|${visitorData.company}|${visitorData.vehicle}|${visitorData.contact}`;
                 
+                // QR CODE SIZE INCREASED TO 140 TO FILL THE CENTER GAP
                 new QRCode(qrContainer, { text: qrString, width: 140, height: 140 });
 
                 setTimeout(() => { window.print(); setTimeout(() => { showScreen('home-screen'); signaturePad.clear(); }, 6000); }, 500); 
@@ -406,6 +400,9 @@
         async function startScanner(mode) {
             scanMode = mode;
             document.getElementById('scan-title').innerText = (mode === 'SignOut') ? "Sign Out" : "Re-Sign In";
+            // FIX: Clear the manual input box every time the screen is opened
+            document.getElementById('scan-manual-name').value = ''; 
+            
             showScreen('scan-screen');
             html5QrCode = new Html5Qrcode("reader");
             try {
@@ -414,9 +411,11 @@
         }
 
         function stopScanner() {
+            // FIX: Removed the commands that force the user back to the home screen immediately 
+            // when the camera shuts down. Now the camera shuts down quietly in the background.
             if (html5QrCode && html5QrCode.isScanning) {
                 html5QrCode.stop().then(() => { html5QrCode.clear(); });
-            }
+            } 
         }
 
         function handleScanResult(identifier) {
@@ -426,10 +425,7 @@
             let name = parts[0];
             if (scanMode === 'SignOut') {
                 sendToCloud({ name: name, type: parts[1] || 'Unknown' }, null, "SignOut");
-                
-                // Personalised Sign Out Message
-                document.getElementById('thankyou-msg').innerText = `Thank you ${name}`;
-                
+                document.getElementById('thankyou-msg').innerText = "Goodbye!";
                 showScreen('thankyou-screen');
                 setTimeout(() => { showScreen('home-screen'); }, 4000);
             } else {
