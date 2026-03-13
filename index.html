@@ -112,8 +112,8 @@
         <img src="assets/logo.jpeg" alt="Foster + Freeman Logo" style="width: 250px; margin-bottom: 5px; height: auto;">
         <h1>Welcome</h1>
         <button class="btn" onclick="showScreen('type-screen')">Sign In</button>
-        <button class="btn btn-re-signin" onclick="startScanner('ReSignIn')">🔄 Re-Sign In (Scan Badge)</button>
         <button class="btn btn-secondary" onclick="startScanner('SignOut')">Sign Out</button>
+        <button class="btn btn-re-signin" style="margin-top: 40px;" onclick="startScanner('ReSignIn')">🔄 Re-Sign In (Scan Badge)</button>
     </div>
 
     <div id="type-screen" class="view">
@@ -200,7 +200,7 @@
         let currentDocIndex = 0;
         let scanMode = ''; 
         let isReturningVisitor = false;
-        let visitorData = {}; // Stores details for returning visitors
+        let visitorData = {}; 
         const canvas = document.getElementById('signature-pad');
         const signaturePad = new SignaturePad(canvas);
 
@@ -223,6 +223,30 @@
                 text: "Contractor has read and accepted the FF158 Contractor H&S Induction Form." 
             }
         ];
+
+        // AUDIO BEEP FUNCTION ADDED HERE
+        function playPing() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(1046.50, audioCtx.currentTime); // High C pitch
+                oscillator.frequency.exponentialRampToValueAtTime(2000, audioCtx.currentTime + 0.1);
+                
+                gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.2);
+            } catch(e) {
+                console.log("Audio not supported or blocked by browser.");
+            }
+        }
 
         signaturePad.onBegin = function() {
             if (document.activeElement) document.activeElement.blur();
@@ -362,7 +386,6 @@
             if(signaturePad.isEmpty()) return alert("Please sign the pad.");
 
             if (!isReturningVisitor) {
-                // Pull details from form if it's a new visitor
                 visitorData = {
                     type: currentVisitorType,
                     name: document.getElementById('name').value.trim(),
@@ -372,7 +395,6 @@
                 };
             }
             
-            // Add the fresh signature
             visitorData.signature = signaturePad.toDataURL(); 
 
             if (!isReturningVisitor) {
@@ -383,7 +405,6 @@
             showScreen('thankyou-screen');
 
             let pdfStr = null;
-            // Only generate PDF for brand new contractors (not returning ones)
             if (!isReturningVisitor && visitorData.type === 'Contractor') {
                 pdfStr = await generateContractorPDF(visitorData);
             }
@@ -391,7 +412,6 @@
             sendToCloud(visitorData, pdfStr, "SignIn");
 
             if (!isReturningVisitor) {
-                // --- ONLY PRINT IF NEW VISITOR ---
                 document.getElementById("lbl-name").innerText = visitorData.name;
                 document.getElementById("lbl-company").innerText = visitorData.company;
                 document.getElementById("lbl-type").innerText = "F+F " + visitorData.type;
@@ -399,7 +419,6 @@
                 const qrContainer = document.getElementById("lbl-qr");
                 qrContainer.innerHTML = ""; 
                 
-                // Encode all 5 data points for next time
                 const qrString = `${visitorData.name}|${visitorData.type}|${visitorData.company}|${visitorData.vehicle}|${visitorData.contact}`;
                 new QRCode(qrContainer, {
                     text: qrString, 
@@ -411,7 +430,6 @@
                     setTimeout(() => { showScreen('home-screen'); signaturePad.clear(); }, 6000);
                 }, 500); 
             } else {
-                // Returning visitor - skip print, just go home
                 setTimeout(() => { showScreen('home-screen'); signaturePad.clear(); }, 4000);
             }
         }
@@ -440,7 +458,10 @@
             identifier = identifier.trim();
             if(!identifier) return alert("Please scan a code or enter a name.");
             
-            stopScanner(); // Stops the camera
+            // TRIGGER THE PING SOUND HERE
+            playPing();
+
+            stopScanner(); 
 
             let parts = identifier.split('|');
             let name = parts[0] || identifier;
@@ -455,7 +476,6 @@
                 showScreen('thankyou-screen');
                 setTimeout(() => { showScreen('home-screen'); }, 4000);
             } else {
-                // Bypass to Signature for Re-Sign In
                 isReturningVisitor = true;
                 visitorData = { name, type, company, vehicle, contact };
                 document.getElementById('sig-welcome').innerHTML = `Welcome back <strong>${name}</strong>, please sign in.`;
