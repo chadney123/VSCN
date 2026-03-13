@@ -187,11 +187,11 @@
     </div>
 
     <div id="print-area" style="display: none;">
-        <div id="label-content" style="width: 54mm; height: 86mm; border: 1.5pt solid black; box-sizing: border-box; padding: 4mm; display: flex; flex-direction: column; align-items: center; justify-content: space-between; background: white; overflow: hidden;">
+        <div id="label-content" style="width: 54mm; height: 86mm; border: 1.5pt solid black; box-sizing: border-box; padding: 4mm; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2mm; background: white; overflow: hidden;">
             <img src="assets/logo.jpeg" style="width: 35mm; height: auto; margin-top: 2mm;">
             <div style="text-align: center; width: 100%;">
-                <h2 id="lbl-name" style="margin: 0; font-size: 14pt; text-transform: uppercase; line-height: 1.2;"></h2>
-                <p id="lbl-company" style="margin: 1mm 0; font-size: 10pt; font-weight: bold;"></p>
+                <h2 id="lbl-name" style="margin: 0; font-size: 14pt; text-transform: uppercase; line-height: 1.0;"></h2>
+                <p id="lbl-company" style="margin: 0; font-size: 10pt; font-weight: bold;"></p>
             </div>
             <div id="lbl-qr" style="display: block; margin: 0 auto;"></div>
             <div style="width: 100%; border-top: 1pt solid #000; padding-top: 1mm; margin-bottom: 2mm;">
@@ -383,8 +383,8 @@
                 qrContainer.innerHTML = ""; 
                 const qrString = `${visitorData.name}|${visitorData.type}|${visitorData.company}|${visitorData.vehicle}|${visitorData.contact}`;
                 
-                // BIGGER QR CODE GENERATION
-                new QRCode(qrContainer, { text: qrString, width: 110, height: 110 });
+                // QR CODE SIZE REDUCED FROM 110 TO 90 FOR BETTER CENTERING/FITTING
+                new QRCode(qrContainer, { text: qrString, width: 90, height: 90 });
 
                 setTimeout(() => { window.print(); setTimeout(() => { showScreen('home-screen'); signaturePad.clear(); }, 6000); }, 500); 
             } else {
