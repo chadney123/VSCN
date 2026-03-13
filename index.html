@@ -178,7 +178,7 @@
             <input type="text" id="scan-manual-name" placeholder="Enter Name">
             <button class="btn" onclick="handleScanResult(document.getElementById('scan-manual-name').value)">Confirm</button>
         </div>
-        <button class="btn btn-secondary" onclick="stopScanner()">Back</button>
+        <button class="btn btn-secondary" onclick="stopScanner(); showScreen('home-screen');">Back</button>
     </div>
 
     <div id="thankyou-screen" class="view">
@@ -395,7 +395,6 @@
                 qrContainer.innerHTML = ""; 
                 const qrString = `${visitorData.name}|${visitorData.type}|${visitorData.company}|${visitorData.vehicle}|${visitorData.contact}`;
                 
-                // QR CODE SIZE INCREASED TO 140 TO FILL THE CENTER GAP
                 new QRCode(qrContainer, { text: qrString, width: 140, height: 140 });
 
                 setTimeout(() => { window.print(); setTimeout(() => { showScreen('home-screen'); signaturePad.clear(); }, 6000); }, 500); 
@@ -416,8 +415,8 @@
 
         function stopScanner() {
             if (html5QrCode && html5QrCode.isScanning) {
-                html5QrCode.stop().then(() => { html5QrCode.clear(); showScreen('home-screen'); });
-            } else { showScreen('home-screen'); }
+                html5QrCode.stop().then(() => { html5QrCode.clear(); });
+            }
         }
 
         function handleScanResult(identifier) {
