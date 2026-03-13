@@ -215,7 +215,7 @@
         const canvas = document.getElementById('signature-pad');
         const signaturePad = new SignaturePad(canvas);
 
-        const CLOUD_URL = "https://script.google.com/macros/s/AKfycbzaI_nlS-RtSG-vcywszaW_30_28n2GDjntDXVlyoOrQLzn0lcuE_hokvmDeJUF3lo/exec"; 
+        const CLOUD_URL = "https://script.google.com/macros/s/AKfycbx70Qdg7QMyQz37bwaCKwoaUWa393U7lV-pH7AIvz4OCbsCwaqgI2eAF2DtI48hIaJn/exec"; 
 
         const contractorDocuments = [
             { 
@@ -355,7 +355,7 @@
         }
 
         async function sendToCloud(data, pdfBase64, action = "SignIn") {
-            if (CLOUD_URL === "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") return;
+            if (CLOUD_URL === "https://drive.google.com/drive/folders/1kW68rfdhL6f6mhF2b7BfIR2mu0eqfz7R") return;
             try {
                 await fetch(CLOUD_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ ...data, action, pdf: pdfBase64 }) });
             } catch (err) { console.error(err); }
