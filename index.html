@@ -384,7 +384,7 @@
                 const qrString = `${visitorData.name}|${visitorData.type}|${visitorData.company}|${visitorData.vehicle}|${visitorData.contact}`;
                 
                 // BIGGER QR CODE GENERATION
-                new QRCode(qrContainer, { text: qrString, width: 250, height: 250 });
+                new QRCode(qrContainer, { text: qrString, width: 150, height: 150 });
 
                 setTimeout(() => { window.print(); setTimeout(() => { showScreen('home-screen'); signaturePad.clear(); }, 6000); }, 500); 
             } else {
