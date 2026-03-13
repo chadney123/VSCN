@@ -11,28 +11,95 @@
     <script src="https://unpkg.com/html5-qrcode"></script>
     
     <style>
-        :root { --primary: #49ae34; --bg: #49ae34; --text: #333; --accent: #2c3e50; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); color: var(--text); text-align: center; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 95vh; }
+        :root {
+            --primary: #49ae34; 
+            --bg: #49ae34;
+            --text: #333;
+            --accent: #2c3e50;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 95vh;
+        }
         h1 { font-size: 2.5em; margin-bottom: 10px; }
         .view { display: none; width: 100%; max-width: 600px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .active { display: block; }
         
-        .btn { display: block; width: 100%; padding: 20px; margin: 15px 0; font-size: 1.5em; color: white; background-color: var(--primary); border: none; border-radius: 8px; cursor: pointer; transition: 0.3s; }
-        .btn-secondary { background-color: #6c757d; }
-        .btn-re-signin { position: fixed; bottom: 20px; right: 20px; width: auto; padding: 15px 25px; font-size: 1.1em; background-color: var(--accent); margin: 0; z-index: 100; color: white; border-radius: 8px; border: none; }
+        /* Modal Popup Styling */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 550px;
+            padding: 30px;
+            border-radius: 12px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .progress-text {
+            font-size: 0.9em;
+            color: #666;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        .doc-viewer-container {
+            text-align: center;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            background: #fdfdfd;
+            flex-grow: 1;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .doc-viewer-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
 
-        input[type="text"] { width: 90%; padding: 15px; margin: 10px 0; font-size: 1.2em; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        .btn {
+            display: block; width: 100%; padding: 20px; margin: 15px 0;
+            font-size: 1.5em; color: white; background-color: var(--primary);
+            border: none; border-radius: 8px; cursor: pointer; transition: 0.3s;
+        }
+        .btn:hover { background-color: #3e942c; }
+        .btn-secondary { background-color: #6c757d; }
+        .btn-re-signin { background-color: var(--accent); }
+        
+        .btn-half { width: 48%; display: inline-block; margin: 10px 1%; }
+        .btn-accept { background-color: #28a745; }
+        .btn-decline { background-color: #dc3545; }
+
+        input[type="text"] {
+            width: 90%; padding: 15px; margin: 10px 0; font-size: 1.2em;
+            border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;
+        }
         canvas { border: 2px dashed #ccc; border-radius: 8px; width: 100%; height: 200px; touch-action: none; background: #fafafa; }
         
-        /* Modal Induction Styling */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: white; width: 90%; max-width: 550px; padding: 30px; border-radius: 12px; max-height: 90vh; display: flex; flex-direction: column; }
-        .doc-viewer-container { text-align: center; overflow-y: auto; border: 1px solid #ddd; flex-grow: 1; margin-bottom: 20px; }
-        .doc-viewer-container img { width: 100%; height: auto; }
-        .btn-half { width: 48%; display: inline-block; margin: 10px 1%; }
-
         @media print {
             @page { size: 54mm 86mm; margin: 0; }
+            body { background: white; padding: 0; margin: 0; }
             body * { visibility: hidden; }
             #print-area, #print-area * { visibility: visible; }
             #print-area { position: absolute; left: 0; top: 0; width: 54mm; height: 86mm; display: block !important; }
@@ -42,11 +109,11 @@
 <body>
 
     <div id="home-screen" class="view active">
-        <img src="assets/logo.jpeg" alt="Logo" style="width: 250px; margin-bottom: 5px;">
+        <img src="assets/logo.jpeg" alt="Foster + Freeman Logo" style="width: 250px; margin-bottom: 5px; height: auto;">
         <h1>Welcome</h1>
         <button class="btn" onclick="showScreen('type-screen')">Sign In</button>
-        <button class="btn btn-secondary" onclick="startScanner('SignOut')">Sign Out</button>
         <button class="btn btn-re-signin" onclick="startScanner('ReSignIn')">🔄 Re-Sign In (Scan Badge)</button>
+        <button class="btn btn-secondary" onclick="startScanner('SignOut')">Sign Out</button>
     </div>
 
     <div id="type-screen" class="view">
@@ -58,25 +125,53 @@
 
     <div id="form-screen" class="view">
         <h2 id="form-title">Sign In</h2>
-        <input type="text" id="name" placeholder="Full Name">
-        <input type="text" id="company" placeholder="Company Name">
+        <input type="text" id="name" placeholder="Full Name" required>
+        <input type="text" id="company" placeholder="Company Name" required>
         <input type="text" id="vehicle" placeholder="Vehicle Registration">
-        <input type="text" id="contact" placeholder="F+F Contact Person">
+        <input type="text" id="contact" placeholder="F+F Contact Person" required>
+        
         <button class="btn" onclick="submitDetails()">Next</button>
-        <button class="btn btn-secondary" onclick="showScreen('home-screen')">Cancel</button>
+        <button class="btn btn-secondary" onclick="showScreen('type-screen')">Cancel</button>
+    </div>
+
+    <div id="document-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div id="doc-progress" class="progress-text">Document 1 of 3</div>
+            <h2 id="doc-title" style="margin-top:5px; color: var(--accent);">Document Title</h2>
+            <div id="doc-viewer" class="doc-viewer-container">
+                <img id="doc-image" src="" alt="Induction Document">
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <button class="btn btn-half btn-decline" onclick="declineTerms()">Decline</button>
+                <button class="btn btn-half btn-accept" onclick="acceptCurrentDocument()">I Accept</button>
+            </div>
+        </div>
     </div>
 
     <div id="signature-screen" class="view">
-        <h2 id="sig-welcome">Signature</h2>
-        <p>Please sign below to complete your entry:</p>
+        <h2>Signature</h2>
+        <p id="sig-welcome" style="font-size: 1.2em;">Please sign below to complete your entry:</p>
         <canvas id="signature-pad"></canvas>
-        <button class="btn" onclick="finalizeSignIn()">Complete Sign In</button>
-        <button class="btn btn-secondary" onclick="signaturePad.clear()">Clear</button>
+        <button class="btn btn-secondary" style="padding: 10px; font-size: 1em; margin-top: 10px;" onclick="signaturePad.clear()">Clear Signature</button>
+        <button class="btn" onclick="finalizeSignIn()">Sign In</button>
+    </div>
+
+    <div id="decline-screen" class="view">
+        <h2 style="color: #dc3545;">Assistance Required</h2>
+        <p>You have declined the terms for: <br><strong id="declined-doc-name"></strong></p>
+        <p style="font-size: 1.2em; margin-top: 20px;">Please wait here.</p>
+        <p>A member of staff has been notified and will be with you shortly to assist.</p>
     </div>
 
     <div id="scan-screen" class="view">
         <h2 id="scan-title">Scan Badge</h2>
+        <p id="scan-subtitle">Hold your badge QR code up to the camera</p>
         <div id="reader" style="width: 100%; max-width: 400px; margin: auto; border-radius: 10px; overflow: hidden; background: #000;"></div>
+        <div style="margin-top: 20px;">
+            <p>OR enter name manually:</p>
+            <input type="text" id="scan-manual-name" placeholder="Enter Name">
+            <button class="btn" onclick="handleScanResult(document.getElementById('scan-manual-name').value)">Confirm</button>
+        </div>
         <button class="btn btn-secondary" onclick="stopScanner()">Back</button>
     </div>
 
@@ -85,135 +180,289 @@
         <p>Returning to home screen shortly...</p>
     </div>
 
-    <div id="document-modal" class="modal-overlay">
-        <div class="modal-content">
-            <div id="doc-progress"></div>
-            <h2 id="doc-title"></h2>
-            <div id="doc-viewer" class="doc-viewer-container"><img id="doc-image" src=""></div>
-            <div style="display: flex; justify-content: space-between;">
-                <button class="btn btn-half btn-secondary" onclick="location.reload()">Decline</button>
-                <button class="btn btn-half" onclick="acceptCurrentDocument()">I Accept</button>
-            </div>
-        </div>
-    </div>
-
     <div id="print-area" style="display: none;">
-        <div id="label-content" style="width: 54mm; height: 86mm; border: 1pt solid black; padding: 4mm; display: flex; flex-direction: column; align-items: center; justify-content: space-between; background: white;">
-            <img src="assets/logo.jpeg" style="width: 35mm; height: auto;">
-            <div style="text-align: center;">
-                <h2 id="lbl-name" style="margin: 0; font-size: 14pt; text-transform: uppercase;"></h2>
+        <div id="label-content" style="width: 54mm; height: 86mm; border: 1.5pt solid black; box-sizing: border-box; padding: 4mm; display: flex; flex-direction: column; align-items: center; justify-content: space-between; background: white; overflow: hidden;">
+            <img src="assets/logo.jpeg" style="width: 35mm; height: auto; margin-top: 2mm;">
+            <div style="text-align: center; width: 100%;">
+                <h2 id="lbl-name" style="margin: 0; font-size: 14pt; text-transform: uppercase; line-height: 1.2;"></h2>
                 <p id="lbl-company" style="margin: 1mm 0; font-size: 10pt; font-weight: bold;"></p>
             </div>
-            <div id="lbl-qr"></div>
-            <p id="lbl-type" style="font-size: 8pt; font-weight: bold; border-top: 1pt solid black; width: 100%;"></p>
+            <div id="lbl-qr" style="display: block; margin: 0 auto;"></div>
+            <div style="width: 100%; border-top: 1pt solid #000; padding-top: 1mm; margin-bottom: 2mm;">
+                <p id="lbl-type" style="font-size: 8pt; margin: 0; font-weight: bold;"></p>
+            </div>
         </div>
     </div>
 
     <script>
-        let visitorData = {};
+        let currentVisitorType = '';
         let html5QrCode;
         let currentDocIndex = 0;
+        let scanMode = ''; 
         let isReturningVisitor = false;
+        let visitorData = {}; // Stores details for returning visitors
         const canvas = document.getElementById('signature-pad');
         const signaturePad = new SignaturePad(canvas);
 
         const CLOUD_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE"; 
-        const docs = [
-            { title: "FF156 Contractors Rules", file: "assets/FF156   Contractors Rules v2.0.jpg" },
-            { title: "FF157 Permit to Work", file: "assets/FF157   Permit to Work.jpg" },
-            { title: "FF158 Contractor H&S Induction", file: "assets/FF158   Contractor H&S Induction Form.jpg" }
+
+        const contractorDocuments = [
+            { 
+                title: "1. FF156 Contractors Rules", 
+                file: "assets/FF156   Contractors Rules v2.0.jpg", 
+                text: "Contractor has read and accepted the FF156 Contractors Rules." 
+            },
+            { 
+                title: "2. FF157 Permit to Work", 
+                file: "assets/FF157   Permit to Work.jpg", 
+                text: "Contractor has read and accepted the FF157 Permit to Work." 
+            },
+            { 
+                title: "3. FF158 Contractor H&S Induction Form", 
+                file: "assets/FF158   Contractor H&S Induction Form.jpg", 
+                text: "Contractor has read and accepted the FF158 Contractor H&S Induction Form." 
+            }
         ];
 
-        function showScreen(id) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
+        signaturePad.onBegin = function() {
+            if (document.activeElement) document.activeElement.blur();
+        };
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            document.getElementById('document-modal').style.display = 'none';
         }
+
+        function resizeCanvas() {
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            canvas.getContext("2d").scale(ratio, ratio);
+            signaturePad.clear(); 
+        }
+        window.onresize = resizeCanvas;
 
         function startForm(type) {
             isReturningVisitor = false;
-            visitorData = { type: type };
+            currentVisitorType = type;
             document.getElementById('form-title').innerText = type + ' Sign In';
+            document.getElementById('name').value = '';
+            document.getElementById('company').value = '';
+            document.getElementById('vehicle').value = '';
+            document.getElementById('contact').value = '';
+            document.getElementById('sig-welcome').innerText = "Please sign below to complete your entry:";
+            signaturePad.clear();
             showScreen('form-screen');
         }
 
-        async function startScanner(mode) {
-            document.getElementById('scan-title').innerText = (mode === 'SignOut') ? "Sign Out" : "Re-Sign In";
-            showScreen('scan-screen');
-            html5QrCode = new Html5Qrcode("reader");
-            await html5QrCode.start({ facingMode: "user" }, { fps: 10, qrbox: 250 }, (text) => {
-                html5QrCode.stop();
-                let p = text.split('|');
-                visitorData = { name: p[0], type: p[1], company: p[2], vehicle: p[3], contact: p[4] };
-                if (mode === 'SignOut') {
-                    sendToCloud(visitorData, "SignOut");
-                    showThankYou("Goodbye " + p[0]);
-                } else {
-                    isReturningVisitor = true;
-                    document.getElementById('sig-welcome').innerText = "Welcome back, " + p[0];
-                    showScreen('signature-screen');
-                    setTimeout(() => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; signaturePad.clear(); }, 100);
-                }
-            });
-        }
-
         function submitDetails() {
-            visitorData.name = document.getElementById('name').value;
-            visitorData.company = document.getElementById('company').value;
-            visitorData.vehicle = document.getElementById('vehicle').value;
-            visitorData.contact = document.getElementById('contact').value;
-            if(!visitorData.name || !visitorData.company) return alert("Missing details");
+            const name = document.getElementById('name').value.trim();
+            const company = document.getElementById('company').value.trim();
+            const contact = document.getElementById('contact').value.trim();
 
-            if (visitorData.type === 'Contractor') {
-                currentDocIndex = 0; loadDoc();
+            if(!name || !company || !contact) {
+                alert("Please fill in all required fields.");
+                return;
+            }
+
+            if (currentVisitorType === 'Contractor') {
+                currentDocIndex = 0;
+                loadDocument();
             } else {
                 showScreen('signature-screen');
-                setTimeout(() => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; signaturePad.clear(); }, 100);
+                setTimeout(resizeCanvas, 100);
             }
         }
 
-        function loadDoc() {
-            const d = docs[currentDocIndex];
-            document.getElementById('doc-progress').innerText = `Document ${currentDocIndex+1} of 3`;
-            document.getElementById('doc-title').innerText = d.title;
-            document.getElementById('doc-image').src = d.file;
+        function loadDocument() {
+            const totalDocs = contractorDocuments.length;
+            const currentDoc = contractorDocuments[currentDocIndex];
+            
+            document.getElementById('doc-progress').innerText = `Document ${currentDocIndex + 1} of ${totalDocs}`;
+            document.getElementById('doc-title').innerText = currentDoc.title;
+            document.getElementById('doc-image').src = currentDoc.file;
+            
             document.getElementById('document-modal').style.display = 'flex';
+            document.getElementById('doc-viewer').scrollTop = 0;
         }
 
         function acceptCurrentDocument() {
             currentDocIndex++;
-            if (currentDocIndex < 3) loadDoc();
-            else {
+            if (currentDocIndex < contractorDocuments.length) {
+                loadDocument();
+            } else {
                 document.getElementById('document-modal').style.display = 'none';
                 showScreen('signature-screen');
-                setTimeout(() => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; signaturePad.clear(); }, 100);
+                setTimeout(resizeCanvas, 100);
             }
         }
 
-        function finalizeSignIn() {
-            if(signaturePad.isEmpty()) return alert("Please sign");
-            visitorData.signature = signaturePad.toDataURL();
-            sendToCloud(visitorData, "SignIn");
-            
+        function declineTerms() {
+            const name = document.getElementById('name').value.trim();
+            const company = document.getElementById('company').value.trim();
+            const contact = document.getElementById('contact').value.trim();
+            const declinedTitle = contractorDocuments[currentDocIndex].title;
+
+            document.getElementById('document-modal').style.display = 'none';
+            document.getElementById('declined-doc-name').innerText = declinedTitle;
+            showScreen('decline-screen');
+
+            sendToCloud({
+                name: name,
+                company: company,
+                contact: contact,
+                declinedDoc: declinedTitle
+            }, null, "DeclineNotify");
+
+            setTimeout(() => { showScreen('home-screen'); }, 15000); 
+        }
+
+        async function generateContractorPDF(data) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const now = new Date();
+            const timestamp = now.toLocaleDateString() + " " + now.toLocaleTimeString();
+            const logoImg = new Image();
+            logoImg.src = 'assets/logo.jpeg';
+
+            contractorDocuments.forEach((docItem, index) => {
+                if (index > 0) doc.addPage();
+                doc.addImage(logoImg, 'PNG', 85, 5, 40, 15); 
+                doc.setFontSize(18);
+                doc.text("Foster + Freeman Contractor Agreement", 105, 30, { align: "center" });
+                doc.setFontSize(14);
+                doc.text(docItem.title, 20, 45);
+                doc.setFontSize(11);
+                const splitText = doc.splitTextToSize(docItem.text, 170);
+                doc.text(splitText, 20, 55);
+                
+                doc.setFontSize(12);
+                doc.text("--- DIGITAL ACCEPTANCE STAMP ---", 105, 180, { align: "center" });
+                doc.setFontSize(10);
+                doc.text(`Signed by: ${data.name}`, 20, 190);
+                doc.text(`Company: ${data.company}`, 20, 195);
+                doc.text(`Date/Time: ${timestamp}`, 20, 200);
+                doc.addImage(data.signature, 'PNG', 130, 185, 50, 20); 
+            });
+            return doc.output('datauristring').split(',')[1]; 
+        }
+
+        async function sendToCloud(data, pdfBase64, action = "SignIn") {
+            if (CLOUD_URL === "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") return;
+            const payload = { ...data, action: action, pdf: pdfBase64 };
+            try {
+                await fetch(CLOUD_URL, {
+                    method: "POST", mode: "no-cors", body: JSON.stringify(payload)
+                });
+            } catch (err) { console.error("Cloud sync failed:", err); }
+        }
+
+        async function finalizeSignIn() {
+            if(signaturePad.isEmpty()) return alert("Please sign the pad.");
+
             if (!isReturningVisitor) {
+                // Pull details from form if it's a new visitor
+                visitorData = {
+                    type: currentVisitorType,
+                    name: document.getElementById('name').value.trim(),
+                    company: document.getElementById('company').value.trim(),
+                    vehicle: document.getElementById('vehicle').value.trim(),
+                    contact: document.getElementById('contact').value.trim()
+                };
+            }
+            
+            // Add the fresh signature
+            visitorData.signature = signaturePad.toDataURL(); 
+
+            if (!isReturningVisitor) {
+                document.getElementById('thankyou-msg').innerText = `Thank you ${visitorData.name}, please collect your ID label and Welcome to F+F`;
+            } else {
+                document.getElementById('thankyou-msg').innerText = `Thank you ${visitorData.name}, Welcome back to F+F`;
+            }
+            showScreen('thankyou-screen');
+
+            let pdfStr = null;
+            // Only generate PDF for brand new contractors (not returning ones)
+            if (!isReturningVisitor && visitorData.type === 'Contractor') {
+                pdfStr = await generateContractorPDF(visitorData);
+            }
+
+            sendToCloud(visitorData, pdfStr, "SignIn");
+
+            if (!isReturningVisitor) {
+                // --- ONLY PRINT IF NEW VISITOR ---
                 document.getElementById("lbl-name").innerText = visitorData.name;
                 document.getElementById("lbl-company").innerText = visitorData.company;
                 document.getElementById("lbl-type").innerText = "F+F " + visitorData.type;
-                const qrStr = `${visitorData.name}|${visitorData.type}|${visitorData.company}|${visitorData.vehicle}|${visitorData.contact}`;
-                document.getElementById("lbl-qr").innerHTML = "";
-                new QRCode(document.getElementById("lbl-qr"), { text: qrStr, width: 60, height: 60 });
-                window.print();
+                
+                const qrContainer = document.getElementById("lbl-qr");
+                qrContainer.innerHTML = ""; 
+                
+                // Encode all 5 data points for next time
+                const qrString = `${visitorData.name}|${visitorData.type}|${visitorData.company}|${visitorData.vehicle}|${visitorData.contact}`;
+                new QRCode(qrContainer, {
+                    text: qrString, 
+                    width: 60, height: 60
+                });
+
+                setTimeout(() => {
+                    window.print(); 
+                    setTimeout(() => { showScreen('home-screen'); signaturePad.clear(); }, 6000);
+                }, 500); 
+            } else {
+                // Returning visitor - skip print, just go home
+                setTimeout(() => { showScreen('home-screen'); signaturePad.clear(); }, 4000);
             }
-            showThankYou("Thank you " + visitorData.name);
         }
 
-        function showThankYou(msg) {
-            document.getElementById('thankyou-msg').innerText = msg;
-            showScreen('thankyou-screen');
-            setTimeout(() => location.reload(), 4000);
+        async function startScanner(mode) {
+            scanMode = mode;
+            document.getElementById('scan-title').innerText = (mode === 'SignOut') ? "Sign Out" : "Re-Sign In";
+            showScreen('scan-screen');
+            html5QrCode = new Html5Qrcode("reader");
+            try {
+                await html5QrCode.start(
+                    { facingMode: "user" }, 
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    (decodedText) => { handleScanResult(decodedText); }
+                );
+            } catch (err) { console.error(err); }
         }
 
-        function stopScanner() { if(html5QrCode) html5QrCode.stop().then(()=>location.reload()); else location.reload(); }
-        function sendToCloud(data, action) { if (CLOUD_URL !== "YOUR_URL") fetch(CLOUD_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ ...data, action: action }) }); }
+        function stopScanner() {
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => { html5QrCode.clear(); showScreen('home-screen'); });
+            } else { showScreen('home-screen'); }
+        }
+
+        function handleScanResult(identifier) {
+            identifier = identifier.trim();
+            if(!identifier) return alert("Please scan a code or enter a name.");
+            
+            stopScanner(); // Stops the camera
+
+            let parts = identifier.split('|');
+            let name = parts[0] || identifier;
+            let type = parts[1] || 'Unknown';
+            let company = parts[2] || '';
+            let vehicle = parts[3] || '';
+            let contact = parts[4] || '';
+            
+            if (scanMode === 'SignOut') {
+                sendToCloud({ name: name, type: type }, null, "SignOut");
+                document.getElementById('thankyou-msg').innerText = "Thank you and goodbye!";
+                showScreen('thankyou-screen');
+                setTimeout(() => { showScreen('home-screen'); }, 4000);
+            } else {
+                // Bypass to Signature for Re-Sign In
+                isReturningVisitor = true;
+                visitorData = { name, type, company, vehicle, contact };
+                document.getElementById('sig-welcome').innerHTML = `Welcome back <strong>${name}</strong>, please sign in.`;
+                showScreen('signature-screen');
+                setTimeout(resizeCanvas, 100);
+            }
+        }
     </script>
 </body>
 </html>
