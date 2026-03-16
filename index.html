@@ -156,6 +156,8 @@
 
     <div id="signature-screen" class="view">
         <h2>Signature</h2>
+        <video id="face-cam" autoplay playsinline style="width:100%; max-width: 250px; border-radius:10px; margin: 10px auto; display:block; transform: scaleX(-1); background:#000;"></video>
+        
         <p id="sig-welcome" style="font-size: 1.2em;">Please sign below to complete your entry:</p>
         <canvas id="signature-pad"></canvas>
         <button class="btn btn-secondary" style="padding: 10px; font-size: 1em; margin-top: 10px;" onclick="signaturePad.clear()">Clear Signature</button>
@@ -215,7 +217,7 @@
         const canvas = document.getElementById('signature-pad');
         const signaturePad = new SignaturePad(canvas);
 
-        const CLOUD_URL = "https://script.google.com/macros/s/AKfycbx5Pbpa9ihzJ-VFHCp_iQn5Ufxx1HC2xMGAk3E5Vwlye8XL7FRjUBlg-_70j0ipXfyP/exec"; 
+        const CLOUD_URL = "https://script.google.com/macros/s/AKfycbz8BeAQLipt1276gly78KIbl4f-W3SuitYiCaxQa8a0BwOPqYKaNsT_1myVkwHhtYw9/exec"; 
 
         const contractorDocuments = [
             { 
@@ -260,6 +262,21 @@
             document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
             document.getElementById('document-modal').style.display = 'none';
+            
+            // --- Face Camera Logic ---
+            if (screenId === 'signature-screen') {
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+                    .then(stream => { 
+                        document.getElementById('face-cam').srcObject = stream; 
+                    })
+                    .catch(err => console.log("Camera access blocked or unavailable."));
+            } else {
+                const video = document.getElementById('face-cam');
+                if (video && video.srcObject) {
+                    video.srcObject.getTracks().forEach(track => track.stop());
+                    video.srcObject = null;
+                }
+            }
         }
 
         function resizeCanvas() {
@@ -354,12 +371,11 @@
             return doc.output('datauristring').split(',')[1]; 
         }
 
-               async function sendToCloud(data, pdfBase64, action = "SignIn") {
-            // We removed the 'if' statement that was blocking the send
+        async function sendToCloud(data, pdfBase64, action = "SignIn") {
             try {
                 await fetch(CLOUD_URL, { 
                     method: "POST", 
-                    mode: "no-cors", // This is required for Google Apps Script
+                    mode: "no-cors", 
                     body: JSON.stringify({ ...data, action, pdf: pdfBase64 }) 
                 });
                 console.log("Data sent for action: " + action);
@@ -407,7 +423,6 @@
         async function startScanner(mode) {
             scanMode = mode;
             document.getElementById('scan-title').innerText = (mode === 'SignOut') ? "Sign Out" : "Re-Sign In";
-            // FIX: Clear the manual input box every time the screen is opened
             document.getElementById('scan-manual-name').value = ''; 
             
             showScreen('scan-screen');
@@ -418,8 +433,6 @@
         }
 
         function stopScanner() {
-            // FIX: Removed the commands that force the user back to the home screen immediately 
-            // when the camera shuts down. Now the camera shuts down quietly in the background.
             if (html5QrCode && html5QrCode.isScanning) {
                 html5QrCode.stop().then(() => { html5QrCode.clear(); });
             } 
