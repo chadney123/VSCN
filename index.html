@@ -31,7 +31,7 @@
             min-height: 95vh;
         }
         h1 { font-size: 2.5em; margin-bottom: 5px; }
-        .view { display: none; width: 100%; max-width: 600px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; z-index: 1; }
+        .view { display: none; width: 100%; max-width: 600px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .active { display: block; }
 
         .safety-notice {
@@ -50,11 +50,11 @@
             position: fixed;
             bottom: 15px;
             right: 15px;
-            width: 100px; /* Adjust size as needed */
+            width: 125px; /* 25% bigger */
             height: auto;
-            opacity: 0.7; /* Makes it subtle/watermarked */
+            opacity: 0.9; /* Less transparent */
             z-index: 100;
-            pointer-events: none; /* Prevents it from blocking button clicks */
+            pointer-events: none; /* Prevents the logo from blocking button clicks */
         }
 
         #reader video {
@@ -100,7 +100,7 @@
             body * { visibility: hidden; }
             #print-area, #print-area * { visibility: visible; }
             #print-area { position: absolute; left: 0; top: 0; width: 54mm; height: 86mm; display: block !important; }
-            .software-logo { display: none; } /* Hide watermark on the printed badge */
+            .software-logo { display: none; } /* Hides logo on print */
         }
     </style>
 </head>
@@ -117,6 +117,57 @@
         <button class="btn btn-re-signin" style="margin-top: 40px;" onclick="startScanner('ReSignIn')">🔄 Re-Sign In (Scan Badge)</button>
     </div>
 
+    <div id="type-screen" class="view">
+        <h2>Who are you visiting as?</h2>
+        <button class="btn" onclick="startForm('Visitor')">Visitor</button>
+        <button class="btn" onclick="startForm('Contractor')">Contractor</button>
+        <button class="btn btn-secondary" onclick="showScreen('home-screen')">Back</button>
+    </div>
+
+    <div id="form-screen" class="view">
+        <h2 id="form-title">Sign In</h2>
+        <input type="text" id="name" placeholder="Full Name" required>
+        <input type="text" id="company" placeholder="Company Name" required>
+        <input type="text" id="vehicle" placeholder="Vehicle Registration">
+        <input type="text" id="contact" placeholder="F+F Contact Person" required>
+        
+        <button class="btn" onclick="submitDetails()">Next</button>
+        <button class="btn btn-secondary" onclick="showScreen('type-screen')">Cancel</button>
+    </div>
+
+    <div id="document-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div id="doc-progress" class="progress-text">Document 1 of 3</div>
+            <h2 id="doc-title" style="margin-top:5px; color: var(--accent);">Document Title</h2>
+            <div id="doc-viewer" class="doc-viewer-container">
+                <img id="doc-image" src="" alt="Induction Document">
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <button class="btn btn-half btn-decline" onclick="declineTerms()">Decline</button>
+                <button class="btn btn-half btn-accept" onclick="acceptCurrentDocument()">I Accept</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="signature-screen" class="view">
+        <h2>Signature</h2>
+        <div id="camera-container">
+            <video id="face-cam" autoplay playsinline></video>
+            <div id="face-guide"></div>
+        </div>
+        <p id="sig-welcome" style="font-size: 1.2em;">Please sign below to complete your entry:</p>
+        <canvas id="signature-pad"></canvas>
+        <button class="btn btn-secondary" style="padding: 10px; font-size: 1em; margin-top: 10px;" onclick="signaturePad.clear()">Clear Signature</button>
+        <button class="btn" onclick="finalizeSignIn()">Sign In</button>
+    </div>
+
+    <div id="decline-screen" class="view">
+        <h2 style="color: #dc3545;">Assistance Required</h2>
+        <p>You have declined the terms for: <br><strong id="declined-doc-name"></strong></p>
+        <p style="font-size: 1.2em; margin-top: 20px;">Please wait here.</p>
+        <p>A member of staff has been notified and will be with you shortly to assist.</p>
+    </div>
+
     <div id="scan-screen" class="view">
         <h2 id="scan-title">Scan Badge</h2>
         <div id="safety-reminder-out" class="safety-notice" style="display:none;">Please scan out so you are accounted for in an evacuation.</div>
@@ -130,10 +181,267 @@
         <button class="btn btn-secondary" onclick="stopScanner(); showScreen('home-screen');">Back</button>
     </div>
 
+    <div id="thankyou-screen" class="view">
+        <h2 id="thankyou-msg">Thank you!</h2>
+        <p>Returning to home screen shortly...</p>
+    </div>
+
+    <div id="print-area" style="display: none;">
+        <div id="label-content" style="width: 54mm; height: 86mm; border: 1.5pt solid black; box-sizing: border-box; padding: 4mm; display: flex; flex-direction: column; align-items: center; justify-content: space-between; background: white; overflow: hidden;">
+            <div style="text-align: center; width: 100%;">
+                <img src="assets/newlogo.jpeg" style="width: 42mm; height: auto; margin-top: 0;">
+                <div style="margin-top: 1mm;">
+                    <h2 id="lbl-name" style="margin: 0; font-size: 16pt; text-transform: uppercase; line-height: 1.0;"></h2>
+                    <p id="lbl-company" style="margin: 0; font-size: 11pt; font-weight: bold;"></p>
+                </div>
+            </div>
+            <div id="lbl-qr" style="display: block; margin: 1mm auto;"></div>
+            <div style="width: 100%; border-top: 1.2pt solid #000; padding-top: 3mm; margin-bottom: 1mm;">
+                <p id="lbl-type" style="font-size: 11pt; margin: 0; font-weight: bold; text-transform: uppercase;"></p>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Copy the script block from the previous version exactly as is. 
-        // Ensure you change "assets/software-logo.png" in the HTML above 
-        // to match your actual logo file name.
+        let currentVisitorType = '';
+        let html5QrCode;
+        let currentDocIndex = 0;
+        let scanMode = ''; 
+        let isReturningVisitor = false;
+        let visitorData = {}; 
+        const canvas = document.getElementById('signature-pad');
+        const signaturePad = new SignaturePad(canvas);
+
+        const CLOUD_URL = "https://script.google.com/macros/s/AKfycbz8BeAQLipt1276gly78KIbl4f-W3SuitYiCaxQa8a0BwOPqYKaNsT_1myVkwHhtYw9/exec"; 
+
+        const contractorDocuments = [
+            { title: "1. FF156 Contractors Rules", file: "assets/FF156   Contractors Rules v2.0.jpg", text: "Contractor has read and accepted the FF156 Contractors Rules." },
+            { title: "2. FF157 Permit to Work", file: "assets/FF157   Permit to Work.jpg", text: "Contractor has read and accepted the FF157 Permit to Work." },
+            { title: "3. FF158 Contractor H&S Induction Form", file: "assets/FF158   Contractor H&S Induction Form.jpg", text: "Contractor has read and accepted the FF158 Contractor H&S Induction Form." }
+        ];
+
+        function playPing() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(1046.50, audioCtx.currentTime); 
+                oscillator.frequency.exponentialRampToValueAtTime(2000, audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                oscillator.connect(gainNode); gainNode.connect(audioCtx.destination);
+                oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.2);
+            } catch(e) { console.log("Audio blocked."); }
+        }
+
+        signaturePad.onBegin = function() { if (document.activeElement) document.activeElement.blur(); };
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            document.getElementById('document-modal').style.display = 'none';
+            
+            if (screenId === 'signature-screen') {
+                const faceGuide = document.getElementById('face-guide');
+                faceGuide.style.display = (currentVisitorType === 'Contractor') ? 'block' : 'none';
+                faceGuide.style.borderColor = '#dc3545';
+
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+                    .then(stream => { document.getElementById('face-cam').srcObject = stream; })
+                    .catch(err => console.log("Camera blocked."));
+            } else {
+                const video = document.getElementById('face-cam');
+                if (video && video.srcObject) {
+                    video.srcObject.getTracks().forEach(track => track.stop());
+                    video.srcObject = null;
+                }
+            }
+        }
+
+        function resizeCanvas() {
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            canvas.getContext("2d").scale(ratio, ratio);
+            signaturePad.clear(); 
+        }
+        window.onresize = resizeCanvas;
+
+        function startForm(type) {
+            isReturningVisitor = false;
+            currentVisitorType = type;
+            document.getElementById('form-title').innerText = type + ' Sign In';
+            document.getElementById('name').value = ''; document.getElementById('company').value = '';
+            document.getElementById('vehicle').value = ''; document.getElementById('contact').value = '';
+            document.getElementById('sig-welcome').innerText = "Please sign below to complete your entry:";
+            signaturePad.clear();
+            showScreen('form-screen');
+        }
+
+        function submitDetails() {
+            const name = document.getElementById('name').value.trim();
+            const company = document.getElementById('company').value.trim();
+            const contact = document.getElementById('contact').value.trim();
+            if(!name || !company || !contact) { alert("Please fill in all fields."); return; }
+
+            if (currentVisitorType === 'Contractor') {
+                currentDocIndex = 0; loadDocument();
+            } else {
+                showScreen('signature-screen'); setTimeout(resizeCanvas, 100);
+            }
+        }
+
+        function loadDocument() {
+            document.getElementById('doc-progress').innerText = `Document ${currentDocIndex + 1} of ${contractorDocuments.length}`;
+            document.getElementById('doc-title').innerText = contractorDocuments[currentDocIndex].title;
+            document.getElementById('doc-image').src = contractorDocuments[currentDocIndex].file;
+            document.getElementById('document-modal').style.display = 'flex';
+            document.getElementById('doc-viewer').scrollTop = 0;
+        }
+
+        function acceptCurrentDocument() {
+            currentDocIndex++;
+            if (currentDocIndex < contractorDocuments.length) { loadDocument(); } 
+            else {
+                document.getElementById('document-modal').style.display = 'none';
+                showScreen('signature-screen'); setTimeout(resizeCanvas, 100);
+            }
+        }
+
+        function declineTerms() {
+            const name = document.getElementById('name').value.trim();
+            const declinedTitle = contractorDocuments[currentDocIndex].title;
+            document.getElementById('document-modal').style.display = 'none';
+            document.getElementById('declined-doc-name').innerText = declinedTitle;
+            showScreen('decline-screen');
+            sendToCloud({ name: name, declinedDoc: declinedTitle }, null, "DeclineNotify");
+            setTimeout(() => { showScreen('home-screen'); }, 15000); 
+        }
+
+        async function generateContractorPDF(data) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const now = new Date();
+            const timestamp = now.toLocaleDateString() + " " + now.toLocaleTimeString();
+            const logoImg = new Image();
+            logoImg.src = 'assets/newlogo.jpeg';
+            
+            contractorDocuments.forEach((docItem, index) => {
+                if (index > 0) doc.addPage();
+                doc.addImage(logoImg, 'PNG', 85, 5, 40, 15); 
+                doc.setFontSize(18);
+                doc.text("Foster + Freeman Contractor Agreement", 105, 30, { align: "center" });
+                
+                if (data.photoData) {
+                    doc.addImage(data.photoData, 'JPEG', 160, 40, 30, 40);
+                }
+
+                doc.setFontSize(14); doc.text(docItem.title, 20, 45);
+                doc.setFontSize(11);
+                const splitText = doc.splitTextToSize(docItem.text, 130);
+                doc.text(splitText, 20, 55);
+                doc.setFontSize(10);
+                doc.text(`Signed by: ${data.name} | Date: ${timestamp}`, 20, 190);
+                doc.addImage(data.signature, 'PNG', 130, 185, 50, 20); 
+            });
+            return doc.output('datauristring').split(',')[1]; 
+        }
+
+        async function sendToCloud(data, pdfBase64, action = "SignIn") {
+            try {
+                await fetch(CLOUD_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ ...data, action, pdf: pdfBase64 }) });
+            } catch (err) { console.error("Cloud Error:", err); }
+        }
+
+        async function finalizeSignIn() {
+            if(signaturePad.isEmpty()) return alert("Please sign the pad.");
+            
+            if (!isReturningVisitor) {
+                visitorData = {
+                    type: currentVisitorType,
+                    name: document.getElementById('name').value.trim(),
+                    company: document.getElementById('company').value.trim(),
+                    vehicle: document.getElementById('vehicle').value.trim(),
+                    contact: document.getElementById('contact').value.trim()
+                };
+            }
+            
+            visitorData.signature = signaturePad.toDataURL(); 
+
+            if (currentVisitorType === 'Contractor') {
+                const video = document.getElementById('face-cam');
+                const faceGuide = document.getElementById('face-guide');
+                faceGuide.style.borderColor = '#28a745'; 
+
+                if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                    const snapCanvas = document.createElement('canvas');
+                    snapCanvas.width = video.videoWidth;
+                    snapCanvas.height = video.videoHeight;
+                    const ctx = snapCanvas.getContext('2d');
+                    ctx.translate(snapCanvas.width, 0); ctx.scale(-1, 1);
+                    ctx.drawImage(video, 0, 0, snapCanvas.width, snapCanvas.height);
+                    visitorData.photoData = snapCanvas.toDataURL('image/jpeg', 0.8);
+                }
+            }
+
+            document.getElementById('thankyou-msg').innerText = `Thank you ${visitorData.name}, Welcome to F+F`;
+            
+            setTimeout(async () => {
+                showScreen('thankyou-screen');
+                let pdfStr = null;
+                if (!isReturningVisitor && visitorData.type === 'Contractor') {
+                    pdfStr = await generateContractorPDF(visitorData);
+                }
+                sendToCloud(visitorData, pdfStr, "SignIn");
+
+                if (!isReturningVisitor) {
+                    document.getElementById("lbl-name").innerText = visitorData.name;
+                    document.getElementById("lbl-company").innerText = visitorData.company;
+                    document.getElementById("lbl-type").innerText = "F+F " + visitorData.type;
+                    const qrContainer = document.getElementById("lbl-qr");
+                    qrContainer.innerHTML = ""; 
+                    new QRCode(qrContainer, { text: `${visitorData.name}|${visitorData.type}|${visitorData.company}|${visitorData.vehicle}|${visitorData.contact}`, width: 140, height: 140 });
+
+                    setTimeout(() => { window.print(); setTimeout(() => { showScreen('home-screen'); signaturePad.clear(); }, 6000); }, 500); 
+                } else {
+                    setTimeout(() => { showScreen('home-screen'); signaturePad.clear(); }, 4000);
+                }
+            }, 500);
+        }
+
+        async function startScanner(mode) {
+            scanMode = mode;
+            document.getElementById('scan-title').innerText = (mode === 'SignOut') ? "Sign Out" : "Re-Sign In";
+            document.getElementById('safety-reminder-out').style.display = (mode === 'SignOut') ? "block" : "none";
+            document.getElementById('scan-manual-name').value = ''; 
+            showScreen('scan-screen');
+            html5QrCode = new Html5Qrcode("reader");
+            try { await html5QrCode.start({ facingMode: "user" }, { fps: 10, qrbox: { width: 250, height: 250 } }, (text) => handleScanResult(text)); } catch (err) {}
+        }
+
+        function stopScanner() { if (html5QrCode && html5QrCode.isScanning) html5QrCode.stop().then(() => html5QrCode.clear()); }
+
+        function handleScanResult(identifier) {
+            // BLOCK empty sign-outs
+            if (!identifier || identifier.trim() === "") {
+                alert("Please scan your badge or enter your name to sign out.");
+                return;
+            }
+
+            playPing(); stopScanner(); 
+            let parts = identifier.split('|'); let name = parts[0];
+            
+            if (scanMode === 'SignOut') {
+                sendToCloud({ name: name, type: parts[1] || 'Unknown' }, null, "SignOut");
+                document.getElementById('thankyou-msg').innerText = `Goodbye ${name}!`; 
+                showScreen('thankyou-screen');
+                setTimeout(() => { showScreen('home-screen'); }, 4000);
+            } else {
+                isReturningVisitor = true;
+                visitorData = { name, type: parts[1], company: parts[2], vehicle: parts[3], contact: parts[4] };
+                document.getElementById('sig-welcome').innerHTML = `Welcome back <strong>${name}</strong>, please sign in.`;
+                showScreen('signature-screen'); setTimeout(resizeCanvas, 100);
+            }
+        }
     </script>
 </body>
 </html>
