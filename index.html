@@ -34,75 +34,44 @@
         .view { display: none; width: 100%; max-width: 600px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .active { display: block; }
 
-        /* MIRROR THE CAMERA VIEW */
         #reader video {
             transform: scaleX(-1);
             -webkit-transform: scaleX(-1);
         }
         
-        /* Modal Popup Styling */
         .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center;
         }
         .modal-content {
-            background: white;
-            width: 90%;
-            max-width: 550px;
-            padding: 30px;
-            border-radius: 12px;
-            max-height: 90vh;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            background: white; width: 90%; max-width: 550px; padding: 30px; border-radius: 12px;
+            max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
-        .progress-text {
-            font-size: 0.9em;
-            color: #666;
-            font-weight: bold;
-            text-transform: upcase;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
-        }
-        .doc-viewer-container {
-            text-align: center;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            background: #fdfdfd;
-            flex-grow: 1;
-            margin-bottom: 20px;
-            border-radius: 4px;
-        }
-        .doc-viewer-container img {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
+        .progress-text { font-size: 0.9em; color: #666; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+        .doc-viewer-container { text-align: center; overflow-y: auto; border: 1px solid #ddd; background: #fdfdfd; flex-grow: 1; margin-bottom: 20px; border-radius: 4px; }
+        .doc-viewer-container img { width: 100%; height: auto; display: block; }
 
-        .btn {
-            display: block; width: 100%; padding: 20px; margin: 15px 0;
-            font-size: 1.5em; color: white; background-color: var(--primary);
-            border: none; border-radius: 8px; cursor: pointer; transition: 0.3s;
-        }
+        .btn { display: block; width: 100%; padding: 20px; margin: 15px 0; font-size: 1.5em; color: white; background-color: var(--primary); border: none; border-radius: 8px; cursor: pointer; transition: 0.3s; }
         .btn:hover { background-color: #3e942c; }
         .btn-secondary { background-color: #6c757d; }
         .btn-re-signin { background-color: var(--accent); }
-        
         .btn-half { width: 48%; display: inline-block; margin: 10px 1%; }
         .btn-accept { background-color: #28a745; }
         .btn-decline { background-color: #dc3545; }
 
-        input[type="text"] {
-            width: 90%; padding: 15px; margin: 10px 0; font-size: 1.2em;
-            border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;
-        }
+        input[type="text"] { width: 90%; padding: 15px; margin: 10px 0; font-size: 1.2em; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
         canvas { border: 2px dashed #ccc; border-radius: 8px; width: 100%; height: 200px; touch-action: none; background: #fafafa; }
         
+        /* Camera Container with Face Guide Overlay */
+        #camera-container { position: relative; width: 100%; max-width: 250px; margin: 10px auto; overflow: hidden; border-radius: 10px; background: #000; }
+        #face-cam { width: 100%; display: block; transform: scaleX(-1); }
+        #face-guide {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 130px; height: 170px; border: 4px dashed #dc3545; /* Red outline */
+            border-radius: 50%; box-sizing: border-box; pointer-events: none; transition: border-color 0.2s ease-in-out;
+            display: none; /* Hidden by default */
+        }
+
         @media print {
             @page { size: 54mm 86mm; margin: 0; }
             body { background: white; padding: 0; margin: 0; }
@@ -156,7 +125,11 @@
 
     <div id="signature-screen" class="view">
         <h2>Signature</h2>
-        <video id="face-cam" autoplay playsinline style="width:100%; max-width: 250px; border-radius:10px; margin: 10px auto; display:block; transform: scaleX(-1); background:#000;"></video>
+        
+        <div id="camera-container">
+            <video id="face-cam" autoplay playsinline></video>
+            <div id="face-guide"></div>
+        </div>
         
         <p id="sig-welcome" style="font-size: 1.2em;">Please sign below to complete your entry:</p>
         <canvas id="signature-pad"></canvas>
@@ -190,7 +163,6 @@
 
     <div id="print-area" style="display: none;">
         <div id="label-content" style="width: 54mm; height: 86mm; border: 1.5pt solid black; box-sizing: border-box; padding: 4mm; display: flex; flex-direction: column; align-items: center; justify-content: space-between; background: white; overflow: hidden;">
-            
             <div style="text-align: center; width: 100%;">
                 <img src="assets/newlogo.jpeg" style="width: 42mm; height: auto; margin-top: 0;">
                 <div style="margin-top: 1mm;">
@@ -198,9 +170,7 @@
                     <p id="lbl-company" style="margin: 0; font-size: 11pt; font-weight: bold;"></p>
                 </div>
             </div>
-
             <div id="lbl-qr" style="display: block; margin: 1mm auto;"></div>
-
             <div style="width: 100%; border-top: 1.2pt solid #000; padding-top: 3mm; margin-bottom: 1mm;">
                 <p id="lbl-type" style="font-size: 11pt; margin: 0; font-weight: bold; text-transform: uppercase;"></p>
             </div>
@@ -220,26 +190,9 @@
         const CLOUD_URL = "https://script.google.com/macros/s/AKfycbz8BeAQLipt1276gly78KIbl4f-W3SuitYiCaxQa8a0BwOPqYKaNsT_1myVkwHhtYw9/exec"; 
 
         const contractorDocuments = [
-            { 
-                title: "1. FF156 Contractors Rules", 
-                file: "assets/FF156   Contractors Rules v2.0.jpg", 
-                text: "Contractor has read and accepted the FF156 Contractors Rules." 
-            },
-            { 
-                title: "2. FF157 Permit to Work", 
-                file: "assets/FF157   Permit to Work v2.0.jpg", 
-                text: "Contractor has read and accepted the FF157 Permit to Work." 
-            },
-            { 
-                title: "3. FF158 Contractor H&S Induction Form", 
-                file: "assets/FF158   Contractor H&S Induction Form v4.0.jpg", 
-                text: "Contractor has read and accepted the FF158 Contractor H&S Induction Form." 
-            },
-            { 
-                title: "4. RA069 SITE RA F&F v8.0", 
-                file: "assets/RA069   SITE RA F&F v8.0.jpg", 
-                text: "Contractor has read and accepted the RA069 SITE RA F&F v8.0." 
-            }
+            { title: "1. FF156 Contractors Rules", file: "assets/FF156   Contractors Rules v2.0.jpg", text: "Contractor has read and accepted the FF156 Contractors Rules." },
+            { title: "2. FF157 Permit to Work", file: "assets/FF157   Permit to Work.jpg", text: "Contractor has read and accepted the FF157 Permit to Work." },
+            { title: "3. FF158 Contractor H&S Induction Form", file: "assets/FF158   Contractor H&S Induction Form.jpg", text: "Contractor has read and accepted the FF158 Contractor H&S Induction Form." }
         ];
 
         function playPing() {
@@ -247,34 +200,30 @@
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 const oscillator = audioCtx.createOscillator();
                 const gainNode = audioCtx.createGain();
-                oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(1046.50, audioCtx.currentTime); 
+                oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(1046.50, audioCtx.currentTime); 
                 oscillator.frequency.exponentialRampToValueAtTime(2000, audioCtx.currentTime + 0.1);
-                gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                oscillator.start();
-                oscillator.stop(audioCtx.currentTime + 0.2);
+                gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                oscillator.connect(gainNode); gainNode.connect(audioCtx.destination);
+                oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.2);
             } catch(e) { console.log("Audio blocked."); }
         }
 
-        signaturePad.onBegin = function() {
-            if (document.activeElement) document.activeElement.blur();
-        };
+        signaturePad.onBegin = function() { if (document.activeElement) document.activeElement.blur(); };
 
         function showScreen(screenId) {
             document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
             document.getElementById('document-modal').style.display = 'none';
             
-            // --- Face Camera Logic ---
             if (screenId === 'signature-screen') {
+                // Show face outline ONLY for Contractors
+                const faceGuide = document.getElementById('face-guide');
+                faceGuide.style.display = (currentVisitorType === 'Contractor') ? 'block' : 'none';
+                faceGuide.style.borderColor = '#dc3545'; // Reset to red
+
                 navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-                    .then(stream => { 
-                        document.getElementById('face-cam').srcObject = stream; 
-                    })
-                    .catch(err => console.log("Camera access blocked or unavailable."));
+                    .then(stream => { document.getElementById('face-cam').srcObject = stream; })
+                    .catch(err => console.log("Camera blocked."));
             } else {
                 const video = document.getElementById('face-cam');
                 if (video && video.srcObject) {
@@ -297,10 +246,8 @@
             isReturningVisitor = false;
             currentVisitorType = type;
             document.getElementById('form-title').innerText = type + ' Sign In';
-            document.getElementById('name').value = '';
-            document.getElementById('company').value = '';
-            document.getElementById('vehicle').value = '';
-            document.getElementById('contact').value = '';
+            document.getElementById('name').value = ''; document.getElementById('company').value = '';
+            document.getElementById('vehicle').value = ''; document.getElementById('contact').value = '';
             document.getElementById('sig-welcome').innerText = "Please sign below to complete your entry:";
             signaturePad.clear();
             showScreen('form-screen');
@@ -313,32 +260,26 @@
             if(!name || !company || !contact) { alert("Please fill in all fields."); return; }
 
             if (currentVisitorType === 'Contractor') {
-                currentDocIndex = 0;
-                loadDocument();
+                currentDocIndex = 0; loadDocument();
             } else {
-                showScreen('signature-screen');
-                setTimeout(resizeCanvas, 100);
+                showScreen('signature-screen'); setTimeout(resizeCanvas, 100);
             }
         }
 
         function loadDocument() {
-            const totalDocs = contractorDocuments.length;
-            const currentDoc = contractorDocuments[currentDocIndex];
-            document.getElementById('doc-progress').innerText = `Document ${currentDocIndex + 1} of ${totalDocs}`;
-            document.getElementById('doc-title').innerText = currentDoc.title;
-            document.getElementById('doc-image').src = currentDoc.file;
+            document.getElementById('doc-progress').innerText = `Document ${currentDocIndex + 1} of ${contractorDocuments.length}`;
+            document.getElementById('doc-title').innerText = contractorDocuments[currentDocIndex].title;
+            document.getElementById('doc-image').src = contractorDocuments[currentDocIndex].file;
             document.getElementById('document-modal').style.display = 'flex';
             document.getElementById('doc-viewer').scrollTop = 0;
         }
 
         function acceptCurrentDocument() {
             currentDocIndex++;
-            if (currentDocIndex < contractorDocuments.length) {
-                loadDocument();
-            } else {
+            if (currentDocIndex < contractorDocuments.length) { loadDocument(); } 
+            else {
                 document.getElementById('document-modal').style.display = 'none';
-                showScreen('signature-screen');
-                setTimeout(resizeCanvas, 100);
+                showScreen('signature-screen'); setTimeout(resizeCanvas, 100);
             }
         }
 
@@ -359,15 +300,21 @@
             const timestamp = now.toLocaleDateString() + " " + now.toLocaleTimeString();
             const logoImg = new Image();
             logoImg.src = 'assets/newlogo.jpeg';
+            
             contractorDocuments.forEach((docItem, index) => {
                 if (index > 0) doc.addPage();
                 doc.addImage(logoImg, 'PNG', 85, 5, 40, 15); 
                 doc.setFontSize(18);
                 doc.text("Foster + Freeman Contractor Agreement", 105, 30, { align: "center" });
-                doc.setFontSize(14);
-                doc.text(docItem.title, 20, 45);
+                
+                // Add the captured face photo to the top right of the PDF
+                if (data.photoData) {
+                    doc.addImage(data.photoData, 'JPEG', 160, 40, 30, 40); // 30x40mm Portrait
+                }
+
+                doc.setFontSize(14); doc.text(docItem.title, 20, 45);
                 doc.setFontSize(11);
-                const splitText = doc.splitTextToSize(docItem.text, 170);
+                const splitText = doc.splitTextToSize(docItem.text, 130); // Narrowed slightly to fit photo
                 doc.text(splitText, 20, 55);
                 doc.setFontSize(10);
                 doc.text(`Signed by: ${data.name} | Date: ${timestamp}`, 20, 190);
@@ -378,19 +325,13 @@
 
         async function sendToCloud(data, pdfBase64, action = "SignIn") {
             try {
-                await fetch(CLOUD_URL, { 
-                    method: "POST", 
-                    mode: "no-cors", 
-                    body: JSON.stringify({ ...data, action, pdf: pdfBase64 }) 
-                });
-                console.log("Data sent for action: " + action);
-            } catch (err) { 
-                console.error("Cloud Error:", err); 
-            }
+                await fetch(CLOUD_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ ...data, action, pdf: pdfBase64 }) });
+            } catch (err) { console.error("Cloud Error:", err); }
         }
 
         async function finalizeSignIn() {
             if(signaturePad.isEmpty()) return alert("Please sign the pad.");
+            
             if (!isReturningVisitor) {
                 visitorData = {
                     type: currentVisitorType,
@@ -400,65 +341,80 @@
                     contact: document.getElementById('contact').value.trim()
                 };
             }
+            
             visitorData.signature = signaturePad.toDataURL(); 
-            document.getElementById('thankyou-msg').innerText = `Thank you ${visitorData.name}, Welcome to F+F`;
-            showScreen('thankyou-screen');
 
-            let pdfStr = null;
-            if (!isReturningVisitor && visitorData.type === 'Contractor') pdfStr = await generateContractorPDF(visitorData);
-            sendToCloud(visitorData, pdfStr, "SignIn");
-
-            if (!isReturningVisitor) {
-                document.getElementById("lbl-name").innerText = visitorData.name;
-                document.getElementById("lbl-company").innerText = visitorData.company;
-                document.getElementById("lbl-type").innerText = "F+F " + visitorData.type;
-                const qrContainer = document.getElementById("lbl-qr");
-                qrContainer.innerHTML = ""; 
-                const qrString = `${visitorData.name}|${visitorData.type}|${visitorData.company}|${visitorData.vehicle}|${visitorData.contact}`;
+            // --- TAKE PHOTO IF CONTRACTOR ---
+            if (currentVisitorType === 'Contractor') {
+                const video = document.getElementById('face-cam');
+                const faceGuide = document.getElementById('face-guide');
                 
-                // QR CODE SIZE INCREASED TO 140 TO FILL THE CENTER GAP
-                new QRCode(qrContainer, { text: qrString, width: 140, height: 140 });
+                // Flash the guide green
+                faceGuide.style.borderColor = '#28a745'; 
 
-                setTimeout(() => { window.print(); setTimeout(() => { showScreen('home-screen'); signaturePad.clear(); }, 6000); }, 500); 
-            } else {
-                setTimeout(() => { showScreen('home-screen'); signaturePad.clear(); }, 4000);
+                // Snap the photo silently in the background
+                if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                    const snapCanvas = document.createElement('canvas');
+                    snapCanvas.width = video.videoWidth;
+                    snapCanvas.height = video.videoHeight;
+                    const ctx = snapCanvas.getContext('2d');
+                    // Mirror the canvas so the photo saves correctly
+                    ctx.translate(snapCanvas.width, 0); ctx.scale(-1, 1);
+                    ctx.drawImage(video, 0, 0, snapCanvas.width, snapCanvas.height);
+                    visitorData.photoData = snapCanvas.toDataURL('image/jpeg', 0.8);
+                }
             }
+
+            document.getElementById('thankyou-msg').innerText = `Thank you ${visitorData.name}, Welcome to F+F`;
+            
+            // Wait 500ms so they can see the ring turn green, then switch screens
+            setTimeout(async () => {
+                showScreen('thankyou-screen');
+
+                let pdfStr = null;
+                if (!isReturningVisitor && visitorData.type === 'Contractor') {
+                    pdfStr = await generateContractorPDF(visitorData);
+                }
+                sendToCloud(visitorData, pdfStr, "SignIn");
+
+                if (!isReturningVisitor) {
+                    document.getElementById("lbl-name").innerText = visitorData.name;
+                    document.getElementById("lbl-company").innerText = visitorData.company;
+                    document.getElementById("lbl-type").innerText = "F+F " + visitorData.type;
+                    const qrContainer = document.getElementById("lbl-qr");
+                    qrContainer.innerHTML = ""; 
+                    new QRCode(qrContainer, { text: `${visitorData.name}|${visitorData.type}|${visitorData.company}|${visitorData.vehicle}|${visitorData.contact}`, width: 140, height: 140 });
+
+                    setTimeout(() => { window.print(); setTimeout(() => { showScreen('home-screen'); signaturePad.clear(); }, 6000); }, 500); 
+                } else {
+                    setTimeout(() => { showScreen('home-screen'); signaturePad.clear(); }, 4000);
+                }
+            }, 500);
         }
 
         async function startScanner(mode) {
             scanMode = mode;
             document.getElementById('scan-title').innerText = (mode === 'SignOut') ? "Sign Out" : "Re-Sign In";
             document.getElementById('scan-manual-name').value = ''; 
-            
             showScreen('scan-screen');
             html5QrCode = new Html5Qrcode("reader");
-            try {
-                await html5QrCode.start({ facingMode: "user" }, { fps: 10, qrbox: { width: 250, height: 250 } }, (text) => handleScanResult(text));
-            } catch (err) { console.error(err); }
+            try { await html5QrCode.start({ facingMode: "user" }, { fps: 10, qrbox: { width: 250, height: 250 } }, (text) => handleScanResult(text)); } catch (err) {}
         }
 
-        function stopScanner() {
-            if (html5QrCode && html5QrCode.isScanning) {
-                html5QrCode.stop().then(() => { html5QrCode.clear(); });
-            } 
-        }
+        function stopScanner() { if (html5QrCode && html5QrCode.isScanning) html5QrCode.stop().then(() => html5QrCode.clear()); }
 
         function handleScanResult(identifier) {
-            playPing();
-            stopScanner(); 
-            let parts = identifier.split('|');
-            let name = parts[0];
+            playPing(); stopScanner(); 
+            let parts = identifier.split('|'); let name = parts[0];
             if (scanMode === 'SignOut') {
                 sendToCloud({ name: name, type: parts[1] || 'Unknown' }, null, "SignOut");
-                document.getElementById('thankyou-msg').innerText = "Goodbye!";
-                showScreen('thankyou-screen');
+                document.getElementById('thankyou-msg').innerText = "Goodbye!"; showScreen('thankyou-screen');
                 setTimeout(() => { showScreen('home-screen'); }, 4000);
             } else {
                 isReturningVisitor = true;
                 visitorData = { name, type: parts[1], company: parts[2], vehicle: parts[3], contact: parts[4] };
                 document.getElementById('sig-welcome').innerHTML = `Welcome back <strong>${name}</strong>, please sign in.`;
-                showScreen('signature-screen');
-                setTimeout(resizeCanvas, 100);
+                showScreen('signature-screen'); setTimeout(resizeCanvas, 100);
             }
         }
     </script>
