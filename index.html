@@ -41,31 +41,16 @@
         .active { display: block; }
 
         .safety-notice {
-            background: #fff3cd;
-            color: #856404;
-            padding: 10px;
-            border-radius: 6px;
-            font-size: 0.95em;
-            margin-bottom: 20px;
-            border: 1px solid #ffeeba;
-            font-weight: bold;
+            background: #fff3cd; color: #856404; padding: 10px; border-radius: 6px;
+            font-size: 0.95em; margin-bottom: 20px; border: 1px solid #ffeeba; font-weight: bold;
         }
 
         .software-logo {
-            position: fixed;
-            bottom: 15px;
-            right: 15px;
-            width: 125px; 
-            height: auto;
-            opacity: 0.9; 
-            z-index: 100;
-            pointer-events: none; 
+            position: fixed; bottom: 15px; right: 15px; width: 125px; 
+            height: auto; opacity: 0.9; z-index: 100; pointer-events: none; 
         }
 
-        #reader video {
-            transform: scaleX(-1);
-            -webkit-transform: scaleX(-1);
-        }
+        #reader video { transform: scaleX(-1); -webkit-transform: scaleX(-1); }
         
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -95,37 +80,17 @@
         #face-guide {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 130px; height: 170px; border: 4px dashed #dc3545;
-            border-radius: 50%; box-sizing: border-box; pointer-events: none; transition: border-color 0.2s ease-in-out;
-            display: none;
+            border-radius: 50%; box-sizing: border-box; pointer-events: none; display: none;
         }
 
-        /* UPDATED FOR 60mm x 86mm BROTHER LABEL */
         @media print {
             @page { size: 60mm 86mm; margin: 0; }
             body { background: white; padding: 0; margin: 0; }
             body * { visibility: hidden; }
             #print-area, #print-area * { visibility: visible; }
-            #print-area { 
-                position: absolute; 
-                left: 0; 
-                top: 0; 
-                width: 60mm; 
-                height: 86mm; 
-                display: block !important; 
-            }
-            #label-content {
-                width: 60mm !important;
-                height: 86mm !important;
-                border: none !important;
-            }
-            /* QR Code Scaling Fix */
-            #lbl-qr canvas, 
-            #lbl-qr img {
-                width: 35mm !important; 
-                height: 35mm !important;
-                max-width: 100% !important;
-                margin: 0 auto;
-            }
+            #print-area { position: absolute; left: 0; top: 0; width: 60mm; height: 86mm; display: block !important; }
+            #label-content { width: 60mm !important; height: 86mm !important; border: none !important; }
+            #lbl-qr canvas, #lbl-qr img { width: 35mm !important; height: 35mm !important; margin: 0 auto; }
             .software-logo { display: none; }
         }
     </style>
@@ -156,18 +121,15 @@
         <input type="text" id="company" placeholder="Company Name" required>
         <input type="text" id="vehicle" placeholder="Vehicle Registration">
         <input type="text" id="contact" placeholder="F+F Contact Person" required>
-        
         <button class="btn" onclick="submitDetails()">Next</button>
         <button class="btn btn-secondary" onclick="showScreen('type-screen')">Cancel</button>
     </div>
 
     <div id="document-modal" class="modal-overlay">
         <div class="modal-content">
-            <div id="doc-progress" class="progress-text">Document 1 of 3</div>
+            <div id="doc-progress" class="progress-text">Document 1 of 4</div>
             <h2 id="doc-title" style="margin-top:5px; color: var(--accent);">Document Title</h2>
-            <div id="doc-viewer" class="doc-viewer-container">
-                <img id="doc-image" src="" alt="Induction Document">
-            </div>
+            <div id="doc-viewer" class="doc-viewer-container"><img id="doc-image" src=""></div>
             <div style="display: flex; justify-content: space-between;">
                 <button class="btn btn-half btn-decline" onclick="declineTerms()">Decline</button>
                 <button class="btn btn-half btn-accept" onclick="acceptCurrentDocument()">I Accept</button>
@@ -181,54 +143,37 @@
             <video id="face-cam" autoplay playsinline></video>
             <div id="face-guide"></div>
         </div>
-        <p id="sig-welcome" style="font-size: 1.2em;">Please sign below to complete your entry:</p>
+        <p id="sig-welcome" style="font-size: 1.2em;">Please sign below:</p>
         <canvas id="signature-pad"></canvas>
-        <button class="btn btn-secondary" style="padding: 10px; font-size: 1em; margin-top: 10px;" onclick="signaturePad.clear()">Clear Signature</button>
+        <button class="btn btn-secondary" style="padding: 10px; font-size: 1em;" onclick="signaturePad.clear()">Clear</button>
         <button class="btn" onclick="finalizeSignIn()">Sign In</button>
-    </div>
-
-    <div id="decline-screen" class="view">
-        <h2 style="color: #dc3545;">Assistance Required</h2>
-        <p>You have declined the terms for: <br><strong id="declined-doc-name"></strong></p>
-        <p style="font-size: 1.2em; margin-top: 20px;">Please wait here.</p>
-        <p>A member of staff has been notified and will be with you shortly to assist.</p>
-    </div>
-
-    <div id="scan-screen" class="view">
-        <h2 id="scan-title">Scan Badge</h2>
-        <div id="safety-reminder-out" class="safety-notice" style="display:none;">Please scan out so you are accounted for in an evacuation.</div>
-        <p id="scan-subtitle">Hold your badge QR code up to the camera</p>
-        <div id="reader" style="width: 100%; max-width: 400px; margin: auto; border-radius: 10px; overflow: hidden; background: #000;"></div>
-        <div style="margin-top: 20px;">
-            <p>OR enter name manually:</p>
-            <input type="text" id="scan-manual-name" placeholder="Enter Full Name">
-            <button class="btn" onclick="handleScanResult(document.getElementById('scan-manual-name').value)">Confirm</button>
-        </div>
-        <button class="btn btn-secondary" onclick="stopScanner(); showScreen('home-screen');">Back</button>
     </div>
 
     <div id="thankyou-screen" class="view">
         <h2 id="thankyou-msg">Thank you!</h2>
-        <p>Returning to home screen shortly...</p>
+        <p>Printing your badge automatically...</p>
     </div>
 
     <div id="print-area" style="display: none;">
-        <div id="label-content" style="width: 60mm; height: 86mm; box-sizing: border-box; padding: 4mm; display: flex; flex-direction: column; align-items: center; justify-content: space-between; background: white; overflow: hidden;">
-            <div style="text-align: center; width: 100%;">
-                <img src="assets/newlogo.jpeg" style="width: 48mm; height: auto; margin-top: 0;">
-                <div style="margin-top: 2mm;">
-                    <h2 id="lbl-name" style="margin: 0; font-size: 18pt; text-transform: uppercase; line-height: 1.0;"></h2>
-                    <p id="lbl-company" style="margin: 0; font-size: 13pt; font-weight: bold;"></p>
-                </div>
+        <div id="label-content" style="width: 60mm; height: 86mm; display: flex; flex-direction: column; align-items: center; justify-content: space-between; background: white;">
+            <img src="assets/newlogo.jpeg" style="width: 48mm; height: auto;">
+            <div style="text-align: center;">
+                <h2 id="lbl-name" style="margin: 0; font-size: 18pt; text-transform: uppercase;"></h2>
+                <p id="lbl-company" style="margin: 0; font-size: 13pt; font-weight: bold;"></p>
             </div>
-            <div id="lbl-qr" style="display: block; margin: 1mm auto;"></div>
-            <div style="width: 100%; border-top: 1.5pt solid #000; padding-top: 3mm; margin-bottom: 2mm;">
+            <div id="lbl-qr"></div>
+            <div style="width: 100%; border-top: 1.5pt solid #000; padding-top: 2mm;">
                 <p id="lbl-type" style="font-size: 12pt; margin: 0; font-weight: bold; text-transform: uppercase;"></p>
             </div>
         </div>
     </div>
 
     <script>
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(err => console.log("SW failed", err));
+        }
+
         let currentVisitorType = '';
         let html5QrCode;
         let currentDocIndex = 0;
@@ -247,225 +192,93 @@
             { title: "4. RA069 SITE RA F&F", file: "assets/RA069    SITE RA F&F v8.0.jpg", text: "Contractor has read and accepted the RA069 SITE RA F&F." }
         ];
 
-        function playPing() {
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(1046.50, audioCtx.currentTime); 
-                oscillator.frequency.exponentialRampToValueAtTime(2000, audioCtx.currentTime + 0.1);
-                gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-                oscillator.connect(gainNode); gainNode.connect(audioCtx.destination);
-                oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.2);
-            } catch(e) { console.log("Audio blocked."); }
-        }
-
-        signaturePad.onBegin = function() { if (document.activeElement) document.activeElement.blur(); };
-
         function showScreen(screenId) {
             document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
-            document.getElementById('document-modal').style.display = 'none';
-            
             if (screenId === 'signature-screen') {
-                const faceGuide = document.getElementById('face-guide');
-                faceGuide.style.display = (currentVisitorType === 'Contractor') ? 'block' : 'none';
-                faceGuide.style.borderColor = '#dc3545';
-
                 navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-                    .then(stream => { document.getElementById('face-cam').srcObject = stream; })
-                    .catch(err => console.log("Camera blocked."));
-            } else {
-                const video = document.getElementById('face-cam');
-                if (video && video.srcObject) {
-                    video.srcObject.getTracks().forEach(track => track.stop());
-                    video.srcObject = null;
-                }
+                    .then(stream => { document.getElementById('face-cam').srcObject = stream; });
+                setTimeout(resizeCanvas, 100);
             }
         }
 
         function resizeCanvas() {
             const ratio = Math.max(window.devicePixelRatio || 1, 1);
-            canvas.width = canvas.offsetWidth * ratio;
-            canvas.height = canvas.offsetHeight * ratio;
-            canvas.getContext("2d").scale(ratio, ratio);
-            signaturePad.clear(); 
+            canvas.width = canvas.offsetWidth * ratio; canvas.height = canvas.offsetHeight * ratio;
+            canvas.getContext("2d").scale(ratio, ratio); signaturePad.clear();
         }
-        window.onresize = resizeCanvas;
 
         function startForm(type) {
-            isReturningVisitor = false;
-            currentVisitorType = type;
-            document.getElementById('form-title').innerText = type + ' Sign In';
-            document.getElementById('name').value = ''; document.getElementById('company').value = '';
-            document.getElementById('vehicle').value = ''; document.getElementById('contact').value = '';
-            document.getElementById('sig-welcome').innerText = "Please sign below to complete your entry:";
-            signaturePad.clear();
+            isReturningVisitor = false; currentVisitorType = type;
             showScreen('form-screen');
         }
 
         function submitDetails() {
-            const name = document.getElementById('name').value.trim();
-            const company = document.getElementById('company').value.trim();
-            const contact = document.getElementById('contact').value.trim();
-            if(!name || !company || !contact) { alert("Please fill in all fields."); return; }
-
-            if (currentVisitorType === 'Contractor') {
-                currentDocIndex = 0; loadDocument();
-            } else {
-                showScreen('signature-screen'); setTimeout(resizeCanvas, 100);
-            }
+            if (currentVisitorType === 'Contractor') { currentDocIndex = 0; loadDocument(); } 
+            else { showScreen('signature-screen'); }
         }
 
         function loadDocument() {
-            document.getElementById('doc-progress').innerText = `Document ${currentDocIndex + 1} of ${contractorDocuments.length}`;
-            document.getElementById('doc-title').innerText = contractorDocuments[currentDocIndex].title;
+            document.getElementById('doc-progress').innerText = `Document ${currentDocIndex + 1} of 4`;
             document.getElementById('doc-image').src = contractorDocuments[currentDocIndex].file;
             document.getElementById('document-modal').style.display = 'flex';
-            document.getElementById('doc-viewer').scrollTop = 0;
         }
 
         function acceptCurrentDocument() {
             currentDocIndex++;
-            if (currentDocIndex < contractorDocuments.length) { loadDocument(); } 
-            else {
-                document.getElementById('document-modal').style.display = 'none';
-                showScreen('signature-screen'); setTimeout(resizeCanvas, 100);
-            }
-        }
-
-        function declineTerms() {
-            const name = document.getElementById('name').value.trim();
-            const declinedTitle = contractorDocuments[currentDocIndex].title;
-            document.getElementById('document-modal').style.display = 'none';
-            document.getElementById('declined-doc-name').innerText = declinedTitle;
-            showScreen('decline-screen');
-            sendToCloud({ name: name, declinedDoc: declinedTitle }, null, "DeclineNotify");
-            setTimeout(() => { showScreen('home-screen'); }, 15000); 
-        }
-
-        async function generateContractorPDF(data) {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            const now = new Date();
-            const timestamp = now.toLocaleDateString() + " " + now.toLocaleTimeString();
-            const logoImg = new Image();
-            logoImg.src = 'assets/newlogo.jpeg';
-            
-            contractorDocuments.forEach((docItem, index) => {
-                if (index > 0) doc.addPage();
-                doc.addImage(logoImg, 'PNG', 85, 5, 40, 15); 
-                doc.setFontSize(18);
-                doc.text("Foster + Freeman Contractor Agreement", 105, 30, { align: "center" });
-                
-                if (data.photoData) {
-                    doc.addImage(data.photoData, 'JPEG', 160, 40, 30, 40);
-                }
-
-                doc.setFontSize(14); doc.text(docItem.title, 20, 45);
-                doc.setFontSize(11);
-                const splitText = doc.splitTextToSize(docItem.text, 130);
-                doc.text(splitText, 20, 55);
-                doc.setFontSize(10);
-                doc.text(`Signed by: ${data.name} | Date: ${timestamp}`, 20, 190);
-                doc.addImage(data.signature, 'PNG', 130, 185, 50, 20); 
-            });
-            return doc.output('datauristring').split(',')[1]; 
-        }
-
-        async function sendToCloud(data, pdfBase64, action = "SignIn") {
-            try {
-                await fetch(CLOUD_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ ...data, action, pdf: pdfBase64 }) });
-            } catch (err) { console.error("Cloud Error:", err); }
+            if (currentDocIndex < 4) { loadDocument(); } 
+            else { document.getElementById('document-modal').style.display = 'none'; showScreen('signature-screen'); }
         }
 
         async function finalizeSignIn() {
-            if(signaturePad.isEmpty()) return alert("Please sign the pad.");
+            if(signaturePad.isEmpty()) return alert("Please sign.");
             
-            if (!isReturningVisitor) {
-                visitorData = {
-                    type: currentVisitorType,
-                    name: document.getElementById('name').value.trim(),
-                    company: document.getElementById('company').value.trim(),
-                    vehicle: document.getElementById('vehicle').value.trim(),
-                    contact: document.getElementById('contact').value.trim()
-                };
-            }
+            visitorData = isReturningVisitor ? visitorData : {
+                type: currentVisitorType,
+                name: document.getElementById('name').value,
+                company: document.getElementById('company').value,
+                vehicle: document.getElementById('vehicle').value,
+                contact: document.getElementById('contact').value
+            };
             
-            visitorData.signature = signaturePad.toDataURL(); 
-
-            if (currentVisitorType === 'Contractor') {
-                const video = document.getElementById('face-cam');
-                const faceGuide = document.getElementById('face-guide');
-                faceGuide.style.borderColor = '#28a745'; 
-
-                if (video.readyState === video.HAVE_ENOUGH_DATA) {
-                    const snapCanvas = document.createElement('canvas');
-                    snapCanvas.width = video.videoWidth;
-                    snapCanvas.height = video.videoHeight;
-                    const ctx = snapCanvas.getContext('2d');
-                    ctx.translate(snapCanvas.width, 0); ctx.scale(-1, 1);
-                    ctx.drawImage(video, 0, 0, snapCanvas.width, snapCanvas.height);
-                    visitorData.photoData = snapCanvas.toDataURL('image/jpeg', 0.8);
-                }
-            }
-
-            document.getElementById('thankyou-msg').innerText = `Thank you ${visitorData.name}, Welcome to F+F`;
+            showScreen('thankyou-screen');
             
-            setTimeout(async () => {
-                showScreen('thankyou-screen');
-                let pdfStr = null;
-                if (!isReturningVisitor && visitorData.type === 'Contractor') {
-                    pdfStr = await generateContractorPDF(visitorData);
-                }
-                sendToCloud(visitorData, pdfStr, "SignIn");
+            // --- AUTOMATED PRINT LOGIC ---
+            document.getElementById("lbl-name").innerText = visitorData.name;
+            document.getElementById("lbl-company").innerText = visitorData.company;
+            document.getElementById("lbl-type").innerText = "F+F " + visitorData.type;
+            const qrContainer = document.getElementById("lbl-qr");
+            qrContainer.innerHTML = ""; 
+            new QRCode(qrContainer, { text: `${visitorData.name}|${visitorData.type}`, width: 140, height: 140 });
 
-                if (!isReturningVisitor) {
-                    document.getElementById("lbl-name").innerText = visitorData.name;
-                    document.getElementById("lbl-company").innerText = visitorData.company;
-                    document.getElementById("lbl-type").innerText = "F+F " + visitorData.type;
-                    const qrContainer = document.getElementById("lbl-qr");
-                    qrContainer.innerHTML = ""; 
-                    new QRCode(qrContainer, { text: `${visitorData.name}|${visitorData.type}|${visitorData.company}|${visitorData.vehicle}|${visitorData.contact}`, width: 140, height: 140 });
+            // Send to Cloud in background
+            fetch(CLOUD_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ ...visitorData, action: "SignIn" }) });
 
-                    setTimeout(() => { window.print(); setTimeout(() => { showScreen('home-screen'); signaturePad.clear(); }, 6000); }, 500); 
+            // Trigger Print
+            setTimeout(() => {
+                if (typeof fully !== 'undefined') {
+                    fully.print(); // Silent Print for Fully Kiosk
                 } else {
-                    setTimeout(() => { showScreen('home-screen'); signaturePad.clear(); }, 4000);
+                    window.print(); // Fallback
                 }
-            }, 500);
+                setTimeout(() => { location.reload(); }, 5000);
+            }, 1000);
         }
 
         async function startScanner(mode) {
-            scanMode = mode;
-            document.getElementById('scan-title').innerText = (mode === 'SignOut') ? "Sign Out" : "Re-Sign In";
-            document.getElementById('safety-reminder-out').style.display = (mode === 'SignOut') ? "block" : "none";
-            document.getElementById('scan-manual-name').value = ''; 
-            showScreen('scan-screen');
+            scanMode = mode; showScreen('scan-screen');
             html5QrCode = new Html5Qrcode("reader");
-            try { await html5QrCode.start({ facingMode: "user" }, { fps: 10, qrbox: { width: 250, height: 250 } }, (text) => handleScanResult(text)); } catch (err) {}
+            await html5QrCode.start({ facingMode: "user" }, { fps: 10, qrbox: 250 }, (text) => handleScanResult(text));
         }
 
-        function stopScanner() { if (html5QrCode && html5QrCode.isScanning) html5QrCode.stop().then(() => html5QrCode.clear()); }
-
-        function handleScanResult(identifier) {
-            if (!identifier || identifier.trim() === "") {
-                alert("Please scan your badge or enter your name to sign out.");
-                return;
-            }
-
-            playPing(); stopScanner(); 
-            let parts = identifier.split('|'); let name = parts[0];
-            
+        function handleScanResult(text) {
+            if (html5QrCode) html5QrCode.stop();
+            let parts = text.split('|');
             if (scanMode === 'SignOut') {
-                sendToCloud({ name: name, type: parts[1] || 'Unknown' }, null, "SignOut");
-                document.getElementById('thankyou-msg').innerText = `Goodbye ${name}!`; 
+                fetch(CLOUD_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ name: parts[0], action: "SignOut" }) });
+                document.getElementById('thankyou-msg').innerText = "Goodbye!";
                 showScreen('thankyou-screen');
-                setTimeout(() => { showScreen('home-screen'); }, 4000);
-            } else {
-                isReturningVisitor = true;
-                visitorData = { name, type: parts[1], company: parts[2], vehicle: parts[3], contact: parts[4] };
-                document.getElementById('sig-welcome').innerHTML = `Welcome back <strong>${name}</strong>, please sign in.`;
-                showScreen('signature-screen'); setTimeout(resizeCanvas, 100);
+                setTimeout(() => { location.reload(); }, 3000);
             }
         }
     </script>
