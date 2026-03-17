@@ -5,12 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>foster+freeman Visitor Kiosk</title>
     
-    <link rel="manifest" href="manifest.json">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#49ae34">
-    
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -51,15 +45,16 @@
             font-weight: bold;
         }
 
+        /* Software Design Logo Styling */
         .software-logo {
             position: fixed;
             bottom: 15px;
             right: 15px;
-            width: 125px; 
+            width: 125px; /* 25% bigger */
             height: auto;
-            opacity: 0.9; 
+            opacity: 0.9; /* Less transparent */
             z-index: 100;
-            pointer-events: none; 
+            pointer-events: none; /* Prevents the logo from blocking button clicks */
         }
 
         #reader video {
@@ -99,34 +94,13 @@
             display: none;
         }
 
-        /* UPDATED FOR 60mm x 86mm BROTHER LABEL */
         @media print {
-            @page { size: 60mm 86mm; margin: 0; }
+            @page { size: 54mm 86mm; margin: 0; }
             body { background: white; padding: 0; margin: 0; }
             body * { visibility: hidden; }
             #print-area, #print-area * { visibility: visible; }
-            #print-area { 
-                position: absolute; 
-                left: 0; 
-                top: 0; 
-                width: 60mm; 
-                height: 86mm; 
-                display: block !important; 
-            }
-            #label-content {
-                width: 60mm !important;
-                height: 86mm !important;
-                border: none !important;
-            }
-            /* QR Code Scaling Fix */
-            #lbl-qr canvas, 
-            #lbl-qr img {
-                width: 35mm !important; 
-                height: 35mm !important;
-                max-width: 100% !important;
-                margin: 0 auto;
-            }
-            .software-logo { display: none; }
+            #print-area { position: absolute; left: 0; top: 0; width: 54mm; height: 86mm; display: block !important; }
+            .software-logo { display: none; } /* Hides logo on print */
         }
     </style>
 </head>
@@ -202,7 +176,7 @@
         <div style="margin-top: 20px;">
             <p>OR enter name manually:</p>
             <input type="text" id="scan-manual-name" placeholder="Enter Full Name">
-            <button class="btn" onclick="handleScanResult(document.getElementById('scan-manual-name').value)">Confirm</button>
+            <button class="btn" onclick="handleScanResult(document.getElementById('scan-manual-name').value)">Confirm Sign Out</button>
         </div>
         <button class="btn btn-secondary" onclick="stopScanner(); showScreen('home-screen');">Back</button>
     </div>
@@ -213,17 +187,17 @@
     </div>
 
     <div id="print-area" style="display: none;">
-        <div id="label-content" style="width: 60mm; height: 86mm; box-sizing: border-box; padding: 4mm; display: flex; flex-direction: column; align-items: center; justify-content: space-between; background: white; overflow: hidden;">
+        <div id="label-content" style="width: 54mm; height: 86mm; border: 1.5pt solid black; box-sizing: border-box; padding: 4mm; display: flex; flex-direction: column; align-items: center; justify-content: space-between; background: white; overflow: hidden;">
             <div style="text-align: center; width: 100%;">
-                <img src="assets/newlogo.jpeg" style="width: 48mm; height: auto; margin-top: 0;">
-                <div style="margin-top: 2mm;">
-                    <h2 id="lbl-name" style="margin: 0; font-size: 18pt; text-transform: uppercase; line-height: 1.0;"></h2>
-                    <p id="lbl-company" style="margin: 0; font-size: 13pt; font-weight: bold;"></p>
+                <img src="assets/newlogo.jpeg" style="width: 42mm; height: auto; margin-top: 0;">
+                <div style="margin-top: 1mm;">
+                    <h2 id="lbl-name" style="margin: 0; font-size: 16pt; text-transform: uppercase; line-height: 1.0;"></h2>
+                    <p id="lbl-company" style="margin: 0; font-size: 11pt; font-weight: bold;"></p>
                 </div>
             </div>
             <div id="lbl-qr" style="display: block; margin: 1mm auto;"></div>
-            <div style="width: 100%; border-top: 1.5pt solid #000; padding-top: 3mm; margin-bottom: 2mm;">
-                <p id="lbl-type" style="font-size: 12pt; margin: 0; font-weight: bold; text-transform: uppercase;"></p>
+            <div style="width: 100%; border-top: 1.2pt solid #000; padding-top: 3mm; margin-bottom: 1mm;">
+                <p id="lbl-type" style="font-size: 11pt; margin: 0; font-weight: bold; text-transform: uppercase;"></p>
             </div>
         </div>
     </div>
@@ -238,13 +212,12 @@
         const canvas = document.getElementById('signature-pad');
         const signaturePad = new SignaturePad(canvas);
 
-        const CLOUD_URL = "https://script.google.com/macros/s/AKfycby_qooTLeemRIU2S04uBgcXUVjLUags6KRkyXJtElngDbxRA6E2nHZjYxof3RKI6RX1/exec"; 
+        const CLOUD_URL = "https://script.google.com/macros/s/AKfycbz8BeAQLipt1276gly78KIbl4f-W3SuitYiCaxQa8a0BwOPqYKaNsT_1myVkwHhtYw9/exec"; 
 
         const contractorDocuments = [
-            { title: "1. FF156 Contractors Rules", file: "assets/FF156    Contractors Rules v2.0.jpg", text: "Contractor has read and accepted the FF156 Contractors Rules." },
-            { title: "2. FF157 Permit to Work", file: "assets/FF157    Permit to Work v2.0.jpg", text: "Contractor has read and accepted the FF157 Permit to Work." },
-            { title: "3. FF158 Contractor H&S Induction Form", file: "assets/FF158    Contractor H&S Induction Form v4.0.jpg", text: "Contractor has read and accepted the FF158 Contractor H&S Induction Form." },
-            { title: "4. RA069 SITE RA F&F", file: "assets/RA069    SITE RA F&F v8.0.jpg", text: "Contractor has read and accepted the RA069 SITE RA F&F." }
+            { title: "1. FF156 Contractors Rules", file: "assets/FF156   Contractors Rules v2.0.jpg", text: "Contractor has read and accepted the FF156 Contractors Rules." },
+            { title: "2. FF157 Permit to Work", file: "assets/FF157   Permit to Work.jpg", text: "Contractor has read and accepted the FF157 Permit to Work." },
+            { title: "3. FF158 Contractor H&S Induction Form", file: "assets/FF158   Contractor H&S Induction Form.jpg", text: "Contractor has read and accepted the FF158 Contractor H&S Induction Form." }
         ];
 
         function playPing() {
@@ -448,6 +421,7 @@
         function stopScanner() { if (html5QrCode && html5QrCode.isScanning) html5QrCode.stop().then(() => html5QrCode.clear()); }
 
         function handleScanResult(identifier) {
+            // BLOCK empty sign-outs
             if (!identifier || identifier.trim() === "") {
                 alert("Please scan your badge or enter your name to sign out.");
                 return;
