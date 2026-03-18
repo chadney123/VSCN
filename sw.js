@@ -1,8 +1,8 @@
 self.addEventListener('install', (e) => {
-  self.skipWaiting();
+    console.log('[Service Worker] Install');
 });
 
 self.addEventListener('fetch', (e) => {
-  // Simple pass-through for PWA compliance
-  e.respondWith(fetch(e.request));
+    // Just lets network requests pass through normally
+    e.respondWith(fetch(e.request).catch(() => console.log("Offline mode not fully set up.")));
 });
