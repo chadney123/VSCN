@@ -1,11 +1,21 @@
 {
-  "name": "Foster + Freeman Kiosk",
+  "name": "F+F Visitor Kiosk",
   "short_name": "F+F Kiosk",
-  "start_url": "./index.html",
-  "display": "fullscreen",
+  "description": "Foster + Freeman Visitor Management System",
+  "start_url": "./",
+  "display": "standalone",
   "background_color": "#49ae34",
   "theme_color": "#49ae34",
   "icons": [
-    { "src": "assets/newlogo.jpeg", "sizes": "512x512", "type": "image/jpeg" }
+    {
+      "src": "assets/newlogo.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "assets/newlogo.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
   ]
 }
