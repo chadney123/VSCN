@@ -12,9 +12,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://api.printnode.com/client/printnode.js"></script>
     
     <style>
-        /* ... ALL YOUR EXISTING CSS STAYS EXACTLY THE SAME ... */
         :root {
             --primary: #49ae34; 
             --bg: #49ae34;
@@ -49,16 +49,15 @@
             font-weight: bold;
         }
 
-        /* Software Design Logo Styling */
         .software-logo {
             position: fixed;
             bottom: 15px;
             right: 15px;
-            width: 125px; /* 25% bigger */
+            width: 125px;
             height: auto;
-            opacity: 0.9; /* Less transparent */
+            opacity: 0.9;
             z-index: 100;
-            pointer-events: none; /* Prevents the logo from blocking button clicks */
+            pointer-events: none;
         }
 
         #reader video {
@@ -98,13 +97,14 @@
             display: none;
         }
 
+        /* Standard print styles remain as backup */
         @media print {
             @page { size: 54mm 86mm; margin: 0; }
             body { background: white; padding: 0; margin: 0; }
             body * { visibility: hidden; }
             #print-area, #print-area * { visibility: visible; }
             #print-area { position: absolute; left: 0; top: 0; width: 54mm; height: 86mm; display: block !important; }
-            .software-logo { display: none; } /* Hides logo on print */
+            .software-logo { display: none; }
         }
     </style>
 </head>
@@ -207,7 +207,10 @@
     </div>
 
     <script>
-        /* ... ALL YOUR EXISTING JAVASCRIPT STAYS EXACTLY THE SAME ... */
+        // --- PRINTNODE CONFIGURATION ---
+        const PRINTNODE_API_KEY = 'o3yoiUKVBTHyVoHbN7TmGvu55J9LOIq6HuWggf7ZGio'; // Replace this
+        const PRINTNODE_PRINTER_ID = '75275402';    // Replace this
+
         let currentVisitorType = '';
         let html5QrCode;
         let currentDocIndex = 0;
@@ -220,10 +223,10 @@
         const CLOUD_URL = "https://script.google.com/macros/s/AKfycbz8BeAQLipt1276gly78KIbl4f-W3SuitYiCaxQa8a0BwOPqYKaNsT_1myVkwHhtYw9/exec"; 
 
         const contractorDocuments = [
-            { title: "1. FF156 Contractors Rules", file: "assets/FF156   Contractors Rules v2.0.jpg", text: "Contractor has read and accepted the FF156 Contractors Rules." },
-            { title: "2. FF157 Permit to Work", file: "assets/FF157   Permit to Work v2.0.jpg", text: "Contractor has read and accepted the FF157 Permit to Work." },
-            { title: "3. FF158 Contractor H&S Induction Form", file: "assets/FF158   Contractor H&S Induction Form.jpg", text: "Contractor has read and accepted the FF158 Contractor H&S Induction Form." },
-            { title: "4. RA069 SITE RA F&F", file: "assets/RA069   SITE RA F&F v8.0.jpg", text: "Contractor has read and accepted the RA069 SITE RA F&F." }
+            { title: "1. FF156 Contractors Rules", file: "assets/FF156    Contractors Rules v2.0.jpg", text: "Contractor has read and accepted the FF156 Contractors Rules." },
+            { title: "2. FF157 Permit to Work", file: "assets/FF157    Permit to Work v2.0.jpg", text: "Contractor has read and accepted the FF157 Permit to Work." },
+            { title: "3. FF158 Contractor H&S Induction Form", file: "assets/FF158    Contractor H&S Induction Form.jpg", text: "Contractor has read and accepted the FF158 Contractor H&S Induction Form." },
+            { title: "4. RA069 SITE RA F&F", file: "assets/RA069    SITE RA F&F v8.0.jpg", text: "Contractor has read and accepted the RA069 SITE RA F&F." }
         ];
 
         function playPing() {
@@ -323,6 +326,67 @@
             setTimeout(() => { showScreen('home-screen'); }, 15000); 
         }
 
+        // Helper to turn the QR code div into a DataURL for the PDF
+        function getQRCodeDataURL() {
+            const qrCanvas = document.querySelector('#lbl-qr canvas');
+            return qrCanvas ? qrCanvas.toDataURL("image/png") : null;
+        }
+
+        // NEW: SILENT PRINTING VIA PRINTNODE
+        async function sendToPrintNode(vData) {
+            const { jsPDF } = window.jspdf;
+            // Create small CR80 badge PDF (54mm x 86mm)
+            const doc = new jsPDF({ unit: 'mm', format: [54, 86] });
+            
+            // Add Logo
+            const logo = new Image();
+            logo.src = 'assets/newlogo.jpeg';
+            doc.addImage(logo, 'JPEG', 6, 5, 42, 12);
+
+            // Add Text
+            doc.setFontSize(14);
+            doc.text(vData.name.toUpperCase(), 27, 28, { align: 'center' });
+            doc.setFontSize(10);
+            doc.text(vData.company, 27, 34, { align: 'center' });
+
+            // Add QR Code (wait a split second for it to render in background)
+            const qrData = getQRCodeDataURL();
+            if (qrData) {
+                doc.addImage(qrData, 'PNG', 14, 38, 26, 26);
+            }
+
+            // Footer
+            doc.setLineWidth(0.5);
+            doc.line(5, 70, 49, 70);
+            doc.setFontSize(10);
+            doc.text("F+F " + vData.type.toUpperCase(), 27, 78, { align: 'center' });
+
+            const base64PDF = doc.output('datauristring').split(',')[1];
+
+            // Send to PrintNode API
+            try {
+                await fetch('https://api.printnode.com/printjobs', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Basic ' + btoa(PRINTNODE_API_KEY + ':')
+                    },
+                    body: JSON.stringify({
+                        "printerId": PRINTNODE_PRINTER_ID,
+                        "title": "Badge: " + vData.name,
+                        "contentType": "pdf_base64",
+                        "content": base64PDF,
+                        "source": "F+F Kiosk"
+                    })
+                });
+                console.log("Silent Print Sent");
+            } catch (err) {
+                console.error("PrintNode Error:", err);
+                // Fallback to standard print if cloud fails
+                window.print();
+            }
+        }
+
         async function generateContractorPDF(data) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
@@ -400,14 +464,16 @@
                 sendToCloud(visitorData, pdfStr, "SignIn");
 
                 if (!isReturningVisitor) {
-                    document.getElementById("lbl-name").innerText = visitorData.name;
-                    document.getElementById("lbl-company").innerText = visitorData.company;
-                    document.getElementById("lbl-type").innerText = "F+F " + visitorData.type;
+                    // Setup QR for PrintNode capture
                     const qrContainer = document.getElementById("lbl-qr");
                     qrContainer.innerHTML = ""; 
                     new QRCode(qrContainer, { text: `${visitorData.name}|${visitorData.type}|${visitorData.company}|${visitorData.vehicle}|${visitorData.contact}`, width: 140, height: 140 });
 
-                    setTimeout(() => { window.print(); setTimeout(() => { showScreen('home-screen'); signaturePad.clear(); }, 6000); }, 500); 
+                    // TRIGGER SILENT PRINT
+                    setTimeout(() => { 
+                        sendToPrintNode(visitorData); // This replaces window.print()
+                        setTimeout(() => { showScreen('home-screen'); signaturePad.clear(); }, 4000); 
+                    }, 800); 
                 } else {
                     setTimeout(() => { showScreen('home-screen'); signaturePad.clear(); }, 4000);
                 }
@@ -427,7 +493,6 @@
         function stopScanner() { if (html5QrCode && html5QrCode.isScanning) html5QrCode.stop().then(() => html5QrCode.clear()); }
 
         function handleScanResult(identifier) {
-            // BLOCK empty sign-outs
             if (!identifier || identifier.trim() === "") {
                 alert("Please scan your badge or enter your name to sign out.");
                 return;
