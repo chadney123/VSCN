@@ -97,14 +97,12 @@
             display: none;
         }
 
-        /* Standard print styles remain as backup */
         @media print {
             @page { size: 54mm 86mm; margin: 0; }
             body { background: white; padding: 0; margin: 0; }
             body * { visibility: hidden; }
             #print-area, #print-area * { visibility: visible; }
             #print-area { position: absolute; left: 0; top: 0; width: 54mm; height: 86mm; display: block !important; }
-            .software-logo { display: none; }
         }
     </style>
 </head>
@@ -190,26 +188,11 @@
         <p>Returning to home screen shortly...</p>
     </div>
 
-    <div id="print-area" style="display: none;">
-        <div id="label-content" style="width: 54mm; height: 86mm; border: 1.5pt solid black; box-sizing: border-box; padding: 4mm; display: flex; flex-direction: column; align-items: center; justify-content: space-between; background: white; overflow: hidden;">
-            <div style="text-align: center; width: 100%;">
-                <img src="assets/newlogo.jpeg" style="width: 42mm; height: auto; margin-top: 0;">
-                <div style="margin-top: 1mm;">
-                    <h2 id="lbl-name" style="margin: 0; font-size: 16pt; text-transform: uppercase; line-height: 1.0;"></h2>
-                    <p id="lbl-company" style="margin: 0; font-size: 11pt; font-weight: bold;"></p>
-                </div>
-            </div>
-            <div id="lbl-qr" style="display: block; margin: 1mm auto;"></div>
-            <div style="width: 100%; border-top: 1.2pt solid #000; padding-top: 3mm; margin-bottom: 1mm;">
-                <p id="lbl-type" style="font-size: 11pt; margin: 0; font-weight: bold; text-transform: uppercase;"></p>
-            </div>
-        </div>
-    </div>
+    <div id="print-area" style="display: none;"><div id="lbl-qr"></div></div>
 
     <script>
-        // --- PRINTNODE CONFIGURATION ---
-        const PRINTNODE_API_KEY = 'o3yoiUKVBTHyVoHbN7TmGvu55J9LOIq6HuWggf7ZGio'; // Replace this
-        const PRINTNODE_PRINTER_ID = '75275397';    // Replace this
+        const PRINTNODE_API_KEY = 'o3yoiUKVBTHyVoHbN7TmGvu55J9LOIq6HuWggf7ZGio'; 
+        const PRINTNODE_PRINTER_ID = '75275397';    
 
         let currentVisitorType = '';
         let html5QrCode;
@@ -223,10 +206,10 @@
         const CLOUD_URL = "https://script.google.com/macros/s/AKfycbz8BeAQLipt1276gly78KIbl4f-W3SuitYiCaxQa8a0BwOPqYKaNsT_1myVkwHhtYw9/exec"; 
 
         const contractorDocuments = [
-            { title: "1. FF156 Contractors Rules", file: "assets/FF156   Contractors Rules v2.0.jpg", text: "Contractor has read and accepted the FF156 Contractors Rules." },
-            { title: "2. FF157 Permit to Work", file: "assets/FF157   Permit to Work v2.0.jpg", text: "Contractor has read and accepted the FF157 Permit to Work." },
-            { title: "3. FF158 Contractor H&S Induction Form", file: "assets/FF158   Contractor H&S Induction Form.jpg", text: "Contractor has read and accepted the FF158 Contractor H&S Induction Form." },
-            { title: "4. RA069 SITE RA F&F", file: "assets/RA069   SITE RA F&F v8.0.jpg", text: "Contractor has read and accepted the RA069 SITE RA F&F." }
+            { title: "1. FF156 Contractors Rules", file: "assets/FF156    Contractors Rules v2.0.jpg", text: "Contractor has read and accepted the FF156 Contractors Rules." },
+            { title: "2. FF157 Permit to Work", file: "assets/FF157    Permit to Work v2.0.jpg", text: "Contractor has read and accepted the FF157 Permit to Work." },
+            { title: "3. FF158 Contractor H&S Induction Form", file: "assets/FF158    Contractor H&S Induction Form.jpg", text: "Contractor has read and accepted the FF158 Contractor H&S Induction Form." },
+            { title: "4. RA069 SITE RA F&F", file: "assets/RA069    SITE RA F&F v8.0.jpg", text: "Contractor has read and accepted the RA069 SITE RA F&F." }
         ];
 
         function playPing() {
@@ -242,8 +225,6 @@
             } catch(e) { console.log("Audio blocked."); }
         }
 
-        signaturePad.onBegin = function() { if (document.activeElement) document.activeElement.blur(); };
-
         function showScreen(screenId) {
             document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
@@ -252,8 +233,6 @@
             if (screenId === 'signature-screen') {
                 const faceGuide = document.getElementById('face-guide');
                 faceGuide.style.display = (currentVisitorType === 'Contractor') ? 'block' : 'none';
-                faceGuide.style.borderColor = '#dc3545';
-
                 navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
                     .then(stream => { document.getElementById('face-cam').srcObject = stream; })
                     .catch(err => console.log("Camera blocked."));
@@ -281,7 +260,6 @@
             document.getElementById('form-title').innerText = type + ' Sign In';
             document.getElementById('name').value = ''; document.getElementById('company').value = '';
             document.getElementById('vehicle').value = ''; document.getElementById('contact').value = '';
-            document.getElementById('sig-welcome').innerText = "Please sign below to complete your entry:";
             signaturePad.clear();
             showScreen('form-screen');
         }
@@ -326,45 +304,41 @@
             setTimeout(() => { showScreen('home-screen'); }, 15000); 
         }
 
-        // Helper to turn the QR code div into a DataURL for the PDF
         function getQRCodeDataURL() {
             const qrCanvas = document.querySelector('#lbl-qr canvas');
             return qrCanvas ? qrCanvas.toDataURL("image/png") : null;
         }
 
-        // NEW: SILENT PRINTING VIA PRINTNODE
+        // UPDATED: 42mm Layout with Tight Spacing
         async function sendToPrintNode(vData) {
             const { jsPDF } = window.jspdf;
-            // Create small CR80 badge PDF (54mm x 86mm)
             const doc = new jsPDF({ unit: 'mm', format: [54, 86] });
             
-            // Add Logo
+            // 1. Logo (At the very top)
             const logo = new Image();
             logo.src = 'assets/newlogo.jpeg';
-            doc.addImage(logo, 'JPEG', 6, 5, 42, 12);
+            doc.addImage(logo, 'JPEG', 6, 2, 42, 12);
 
-            // Add Text (Shifted up slightly to make room)
+            // 2. Text (Tightened Y coordinates)
             doc.setFontSize(14);
-            doc.text(vData.name.toUpperCase(), 27, 26, { align: 'center' });
+            doc.text(vData.name.toUpperCase(), 27, 20, { align: 'center' });
             doc.setFontSize(10);
-            doc.text(vData.company, 27, 32, { align: 'center' });
+            doc.text(vData.company, 27, 26, { align: 'center' });
 
-            // Add QR Code (wait a split second for it to render in background)
+            // 3. Large 42mm QR Code (Centered X=6)
             const qrData = getQRCodeDataURL();
             if (qrData) {
-                // X=10 (Centered), Y=34 (Below text), Width=34, Height=34
-                doc.addImage(qrData, 'PNG', 10, 34, 34, 34);
+                doc.addImage(qrData, 'PNG', 6, 28, 42, 42);
             }
 
-            // Footer (Shifted down slightly to clear the larger QR code)
+            // 4. Footer (Shifted to bottom edge)
             doc.setLineWidth(0.5);
-            doc.line(5, 71, 49, 71);
+            doc.line(5, 74, 49, 74);
             doc.setFontSize(10);
-            doc.text("F+F " + vData.type.toUpperCase(), 27, 78, { align: 'center' });
+            doc.text("F+F " + vData.type.toUpperCase(), 27, 81, { align: 'center' });
 
             const base64PDF = doc.output('datauristring').split(',')[1];
 
-            // Send to PrintNode API
             try {
                 await fetch('https://api.printnode.com/printjobs', {
                     method: 'POST',
@@ -380,10 +354,8 @@
                         "source": "F+F Kiosk"
                     })
                 });
-                console.log("Silent Print Sent");
             } catch (err) {
                 console.error("PrintNode Error:", err);
-                // Fallback to standard print if cloud fails
                 window.print();
             }
         }
@@ -401,11 +373,7 @@
                 doc.addImage(logoImg, 'PNG', 85, 5, 40, 15); 
                 doc.setFontSize(18);
                 doc.text("Foster + Freeman Contractor Agreement", 105, 30, { align: "center" });
-                
-                if (data.photoData) {
-                    doc.addImage(data.photoData, 'JPEG', 160, 40, 30, 40);
-                }
-
+                if (data.photoData) doc.addImage(data.photoData, 'JPEG', 160, 40, 30, 40);
                 doc.setFontSize(14); doc.text(docItem.title, 20, 45);
                 doc.setFontSize(11);
                 const splitText = doc.splitTextToSize(docItem.text, 130);
@@ -440,13 +408,9 @@
 
             if (currentVisitorType === 'Contractor') {
                 const video = document.getElementById('face-cam');
-                const faceGuide = document.getElementById('face-guide');
-                faceGuide.style.borderColor = '#28a745'; 
-
                 if (video.readyState === video.HAVE_ENOUGH_DATA) {
                     const snapCanvas = document.createElement('canvas');
-                    snapCanvas.width = video.videoWidth;
-                    snapCanvas.height = video.videoHeight;
+                    snapCanvas.width = video.videoWidth; snapCanvas.height = video.videoHeight;
                     const ctx = snapCanvas.getContext('2d');
                     ctx.translate(snapCanvas.width, 0); ctx.scale(-1, 1);
                     ctx.drawImage(video, 0, 0, snapCanvas.width, snapCanvas.height);
@@ -455,37 +419,45 @@
             }
 
             document.getElementById('thankyou-msg').innerText = `Thank you ${visitorData.name}, Welcome to F+F`;
-            
-            setTimeout(async () => {
-                showScreen('thankyou-screen');
-                let pdfStr = null;
-                if (!isReturningVisitor && visitorData.type === 'Contractor') {
-                    pdfStr = await generateContractorPDF(visitorData);
-                }
-                sendToCloud(visitorData, pdfStr, "SignIn");
+            showScreen('thankyou-screen');
 
-                if (!isReturningVisitor) {
-                    // Setup QR for PrintNode capture
-                    const qrContainer = document.getElementById("lbl-qr");
-                    qrContainer.innerHTML = ""; 
-                    new QRCode(qrContainer, { text: `${visitorData.name}|${visitorData.type}|${visitorData.company}|${visitorData.vehicle}|${visitorData.contact}`, width: 140, height: 140 });
+            let pdfStr = null;
+            if (!isReturningVisitor && visitorData.type === 'Contractor') {
+                pdfStr = await generateContractorPDF(visitorData);
+            }
+            sendToCloud(visitorData, pdfStr, "SignIn");
 
-                    // TRIGGER SILENT PRINT
-                    setTimeout(() => { 
-                        sendToPrintNode(visitorData); // This replaces window.print()
-                        setTimeout(() => { showScreen('home-screen'); signaturePad.clear(); }, 4000); 
-                    }, 800); 
-                } else {
-                    setTimeout(() => { showScreen('home-screen'); signaturePad.clear(); }, 4000);
-                }
-            }, 500);
+            if (!isReturningVisitor) {
+                const qrContainer = document.getElementById("lbl-qr");
+                qrContainer.innerHTML = ""; 
+
+                // TRUNCATION: Keep data slim for larger QR blocks
+                const sName = visitorData.name.substring(0, 20);
+                const sCo = visitorData.company.substring(0, 20);
+                const sContact = visitorData.contact.substring(0, 15);
+                const qrText = `${sName}|${visitorData.type}|${sCo}|${visitorData.vehicle}|${sContact}`;
+
+                // LEVEL L: Optimized for scanning distance
+                new QRCode(qrContainer, { 
+                    text: qrText, 
+                    width: 256, 
+                    height: 256, 
+                    correctLevel: QRCode.CorrectLevel.L 
+                });
+
+                setTimeout(() => { 
+                    sendToPrintNode(visitorData);
+                    setTimeout(() => { showScreen('home-screen'); signaturePad.clear(); }, 4000); 
+                }, 800); 
+            } else {
+                setTimeout(() => { showScreen('home-screen'); signaturePad.clear(); }, 4000);
+            }
         }
 
         async function startScanner(mode) {
             scanMode = mode;
             document.getElementById('scan-title').innerText = (mode === 'SignOut') ? "Sign Out" : "Re-Sign In";
             document.getElementById('safety-reminder-out').style.display = (mode === 'SignOut') ? "block" : "none";
-            document.getElementById('scan-manual-name').value = ''; 
             showScreen('scan-screen');
             html5QrCode = new Html5Qrcode("reader");
             try { await html5QrCode.start({ facingMode: "user" }, { fps: 10, qrbox: { width: 250, height: 250 } }, (text) => handleScanResult(text)); } catch (err) {}
@@ -494,11 +466,7 @@
         function stopScanner() { if (html5QrCode && html5QrCode.isScanning) html5QrCode.stop().then(() => html5QrCode.clear()); }
 
         function handleScanResult(identifier) {
-            if (!identifier || identifier.trim() === "") {
-                alert("Please scan your badge or enter your name to sign out.");
-                return;
-            }
-
+            if (!identifier) return;
             playPing(); stopScanner(); 
             let parts = identifier.split('|'); let name = parts[0];
             
@@ -515,15 +483,5 @@
             }
         }
     </script>
-    
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                .then(registration => console.log('SW registered'))
-                .catch(err => console.log('SW failed', err));
-            });
-        }
-    </script>
-    </body>
+</body>
 </html>
