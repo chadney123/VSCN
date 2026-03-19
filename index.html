@@ -343,21 +343,22 @@
             logo.src = 'assets/newlogo.jpeg';
             doc.addImage(logo, 'JPEG', 6, 5, 42, 12);
 
-            // Add Text
+            // Add Text (Shifted up slightly to make room)
             doc.setFontSize(14);
-            doc.text(vData.name.toUpperCase(), 27, 28, { align: 'center' });
+            doc.text(vData.name.toUpperCase(), 27, 26, { align: 'center' });
             doc.setFontSize(10);
-            doc.text(vData.company, 27, 34, { align: 'center' });
+            doc.text(vData.company, 27, 32, { align: 'center' });
 
             // Add QR Code (wait a split second for it to render in background)
             const qrData = getQRCodeDataURL();
             if (qrData) {
-                doc.addImage(qrData, 'PNG', 14, 38, 34, 34);
+                // X=10 (Centered), Y=34 (Below text), Width=34, Height=34
+                doc.addImage(qrData, 'PNG', 10, 34, 34, 34);
             }
 
-            // Footer
+            // Footer (Shifted down slightly to clear the larger QR code)
             doc.setLineWidth(0.5);
-            doc.line(5, 70, 49, 70);
+            doc.line(5, 71, 49, 71);
             doc.setFontSize(10);
             doc.text("F+F " + vData.type.toUpperCase(), 27, 78, { align: 'center' });
 
