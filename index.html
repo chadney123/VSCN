@@ -233,6 +233,8 @@
             if (screenId === 'signature-screen') {
                 const faceGuide = document.getElementById('face-guide');
                 faceGuide.style.display = (currentVisitorType === 'Contractor') ? 'block' : 'none';
+                faceGuide.style.borderColor = '#dc3545'; // Reset border to red upon loading screen
+                
                 navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
                     .then(stream => { document.getElementById('face-cam').srcObject = stream; })
                     .catch(err => console.log("Camera blocked."));
@@ -415,6 +417,10 @@
                     ctx.translate(snapCanvas.width, 0); ctx.scale(-1, 1);
                     ctx.drawImage(video, 0, 0, snapCanvas.width, snapCanvas.height);
                     visitorData.photoData = snapCanvas.toDataURL('image/jpeg', 0.8);
+                    
+                    // Turn outline green to signal success, await for 500ms to allow user to see it
+                    document.getElementById('face-guide').style.borderColor = '#28a745';
+                    await new Promise(resolve => setTimeout(resolve, 500));
                 }
             }
 
