@@ -167,7 +167,7 @@
             <label><input type="checkbox" class="extra-chk" id="chk-ff111"> 3. FF111 - Permit to Work - Hot Works</label>
             <label><input type="checkbox" class="extra-chk" id="chk-ff113"> 4. FF113 - Permit to Work - Working at Height</label>
         </div>
-        <textarea id="work-description" placeholder="Description of Work..." rows="3"></textarea>
+        <textarea id="work-description" placeholder="Description of Work (Required)..." rows="3" required></textarea>
         <button class="btn" onclick="submitExtraDocs()">Next</button>
     </div>
 
@@ -341,6 +341,13 @@
 
         // NEW: Submit the checkboxes and begin showing the extra selected files
         function submitExtraDocs() {
+            // Require description of work before proceeding
+            const workDescription = document.getElementById('work-description').value.trim();
+            if (!workDescription) {
+                alert("Please enter a Description of Work before proceeding.");
+                return;
+            }
+
             selectedExtraDocs = [];
             
             if (document.getElementById('chk-ra078').checked) {
